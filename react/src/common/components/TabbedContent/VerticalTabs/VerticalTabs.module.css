@@ -1,0 +1,96 @@
+@import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css");
+
+.ease {
+	-webkit-transition: all .5s;
+	-moz-transition: all .5s;
+	-ms-transition: all .5s;
+	-o-transition: all .5s;
+	transition: all .5s;
+}
+
+.container {
+  display: flex;
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.tabs {
+	position: relative;
+  display: flex;
+  border-radius: 10px;
+	color:var(--tertiary);
+}
+
+.tabs input {
+	position: absolute;
+	filter: alpha(opacity=0);
+	opacity: 0;
+}
+
+.tabs input:hover {
+	cursor: pointer;
+}
+
+.tabs input:hover + span,
+.tabs input:checked + span {
+	background: var(--primary);
+	color: var(--active);
+}
+
+.tabs input:checked + span + i {
+	color: var(--active);
+}
+
+.tabs i {
+	position: absolute;
+	margin-top: -40px;
+	padding: 0 30px;
+	font-size: 20px;
+}
+
+.tabs span,
+.tabs i {
+	-webkit-transition: all .5s;
+	-moz-transition: all .5s;
+	-o-transition: all .5s;
+	transition: all .5s;
+}
+
+.tabs input,
+.tabs span {
+	background: var(--inactive);
+	display: block;
+	width: 200px;
+	height: 60px;
+	line-height: 60px;
+	text-align: center;
+	z-index: 9;
+  border-radius: 0px;
+  font-size: 14px;
+}
+
+.tabs .wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  padding-left: 16px;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+@media only screen and (max-width: 641px) {
+	.tabs input,
+	.tabs span {
+		width: 60px;
+		height: 60px;
+	}
+	.tabs span {
+		filter: alpha(opacity=0);
+		opacity: 0;
+	}
+}

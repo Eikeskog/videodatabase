@@ -1,0 +1,15 @@
+.colors {
+  --primary: #ffffff;
+  --secondary: #000000;
+  --tertiary: #cccccc;
+
+  --accent: teal;
+  --active: #1ABC9C;
+
+  --inactive: #f0f0f0;
+
+  --logo: teal;
+
+  --body-background: rgb(200, 200, 200);
+
+}

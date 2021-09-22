@@ -1,0 +1,22 @@
+.unicodeIcon {
+  display: flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 0.70em;
+  vertical-align: middle;
+  font-family: 'Times New Roman', Times, serif;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border: 1px solid rgb(123,123,123);
+  line-height: 1.7em;
+  font-weigth: 200;
+}

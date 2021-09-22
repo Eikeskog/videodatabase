@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@200;300;400;600;700&display=swap");
+
+* {
+  font-family: "Roboto Mono", monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.app {
+  cursor: default;
+  margin: 0px;
+  padding: 0px;
+  color: rgb(196, 196, 196);
+  font-size: 1em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--body-background);
+  background-attachment: fixed;
+}
+
+.a {
+  cursor: pointer;
+}
+
+.modalContainer {
+  z-index: 9999;
+  background: rgba(0, 0, 0, .6);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: fixed;
+  text-align: center;
+}
+
+.modalContainer:before { 
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.modalDialog {
+  display: inline-block;
+  vertical-align: middle;
+  transition: cubic-bezier(1, 0, 0, 1);
+}
+
+.modalDialog > div {
+  vertical-align: top;
+  background-color: rgb(70, 70, 70);
+  color: var(--primary);
+  width: 800px;
+  height: 600px;
+  border-radius: 5px;
+  text-align: left;
+  background-color: var(--tertiary);
+  color: var(--primary);
+  -webkit-box-shadow: 10px 14px 35px -4px rgba(0, 0, 0, 0.753);
+  -moz-box-shadow: 10px 14px 35px -4px rgba(0, 0, 0, 0.678);
+  box-shadow: 10px 14px 35px -4px rgba(0, 0, 0, 0.623);
+}
