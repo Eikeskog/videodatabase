@@ -27,9 +27,9 @@ const ContentContainer = styled(motion.div)`
 `;
 
 const contentContainerVariants = {
-  initial: { opacity: 0.6, height: 'auto', transition: { type: 'spring', duration: 0.1 } },
-  toggle: { opacity: 1, height: 'auto', transition: { type: 'spring', duration: 0.3 } },
-  exit: { opacity: 0, height: 'auto', transition: { type: 'spring', duration: 0.1 } },
+  initial: { opacity: 0.6, height: 'auto' },
+  toggle: { opacity: 1, height: 'auto', transition: { type: 'easeIn', duration: 0.1 } },
+  exit: { opacity: 0.6, height: 'auto', transition: { type: 'easeOut', duration: 0.1 } },
 };
 
 const Header = ({

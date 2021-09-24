@@ -1,58 +1,60 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import MapCanvas from '../../../../MapCanvas/MapCanvas';
+import styled from 'styled-components';
+import { motion } from 'framer-motion';
+import ControlledMapCanvas from '../../../../MapCanvas/ControlledMapCanvas';
+import { useLocationContext } from '../context/locationContext';
 
-const Map = ({
-  videoitemId,
-  mapCenter,
-  showMarker,
-  locationDisplayname,
-}) => {
-  // rough n messy sketch
-  const [draggable, setDraggable] = useState(false);
+const MapContainer = styled(motion.div)`
+  height: ${(props) => props.height};
+  width: ${(props) => props.width};
+  border-radius: 8px;
+  overflow: hidden;
+`;
 
-  const [latLng, setLatLng] = useState({
-    lat: parseFloat(mapCenter?.lat),
-    lng: parseFloat(mapCenter?.lng),
-  });
+const Map = () => {
+  const [showNearbyItems, setShowNearbyItems] = useState(false);
 
-  const marker = showMarker && {
-    [videoitemId]: {
-      lat: latLng.lat,
-      lng: latLng.lng,
-      markerEvents: {
-        onClick: () => null,
-      },
-      draggable,
-    },
-    // ...nearbyItemsMarkers
-  };
-
-  const handleMapMarkerChange = (_, lat, lng) => {
-    setLatLng({ lat, lng });
-  };
+  const {
+    locationDisplayname,
+    setLocationDisplayname,
+    onMapChange,
+    onMarkerChange,
+    mapState,
+    markersState,
+    toggleDraggableMarker,
+    draggableMarker,
+  } = useLocationContext();
 
   return (
     <div>
-      <div style={{
-        height: '400px',
-        width: '100%',
-        borderRadius: '8px',
-        overflow: 'hidden',
-      }}
+      <MapContainer
+        height="320px"
+        width="70%"
+        animate={{
+          width: showNearbyItems
+            ? '70%'
+            : '100%',
+        }}
+        initial={false}
+        transition="spring"
       >
-        <MapCanvas
-          onMarkerChange={handleMapMarkerChange}
-          zoom={14}
-          center={mapCenter}
-          markers={marker}
+        <ControlledMapCanvas
+          mapState={mapState}
+          markersState={markersState}
+          onMarkerChange={onMarkerChange}
+          onMapChange={onMapChange}
           draggable
         />
-      </div>
+      </MapContainer>
 
-      <div style={{
-        position: 'absolute', top: '0', background: 'black', fontSize: '18px', color: 'white',
-      }}
+      <div
+        style={{
+          position: 'absolute',
+          top: '0',
+          background: 'black',
+          fontSize: '18px',
+          color: 'white',
+        }}
       >
         {locationDisplayname}
       </div>
@@ -60,14 +62,14 @@ const Map = ({
       <div style={{ position: 'absolute', bottom: '0', background: 'rgba(0,0,0,0.2)' }}>
         <button
           type="button"
-          onClick={() => setDraggable((prevState) => !prevState)}
+          onClick={toggleDraggableMarker}
           style={{
             padding: '8px',
             margin: '6px',
             borderRadius: '12px',
           }}
         >
-          { draggable ? 'Lagre ny posisjon' : 'Endre posisjon' }
+          { draggableMarker ? 'Lagre ny posisjon' : 'Endre posisjon' }
         </button>
 
         <button
@@ -77,6 +79,7 @@ const Map = ({
             margin: '6px',
             borderRadius: '12px',
           }}
+          onClick={() => setShowNearbyItems((prev) => !prev)}
         >
           Vis i nærheten
         </button>
@@ -88,6 +91,7 @@ const Map = ({
             margin: '6px',
             borderRadius: '12px',
           }}
+          onClick={() => setLocationDisplayname('test')}
         >
           Vis fra samme filmappe
         </button>
@@ -98,20 +102,35 @@ const Map = ({
 };
 
 Map.propTypes = {
-  videoitemId: PropTypes.string,
-  mapCenter: PropTypes.shape({
-    lat: PropTypes.number,
-    lng: PropTypes.number,
-  }),
-  showMarker: PropTypes.bool,
-  locationDisplayname: PropTypes.string,
+  // markersState: PropTypes.objectOf(
+  //   PropTypes.shape({
+  //     lat: PropTypes.number,
+  //     lng: PropTypes.number,
+  //     draggable: PropTypes.bool,
+  //   }),
+  // ),
+  // draggableMarker: PropTypes.bool,
+  // toggleDraggableMarker: PropTypes.func,
+  // mapState: PropTypes.shape({
+  //   center: PropTypes.shape({
+  //     lat: PropTypes.number,
+  //     lng: PropTypes.number,
+  //   }),
+  //   zoom: PropTypes.number,
+  // }),
+  // onMapChange: PropTypes.func,
+  // locationDisplayname: PropTypes.string,
+  // onMarkerChange: PropTypes.func,
 };
 
 Map.defaultProps = {
-  videoitemId: null,
-  mapCenter: {},
-  showMarker: false,
-  locationDisplayname: '',
+  // markersState: null,
+  // draggableMarker: false,
+  // toggleDraggableMarker: null,
+  // mapState: null,
+  // locationDisplayname: '',
+  // onMarkerChange: null,
+  // onMapChange: null,
 };
 
 export default Map;

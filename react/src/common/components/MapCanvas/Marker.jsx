@@ -29,26 +29,6 @@ const DraggableMarker = ({ markerEvents }) => (
   </motion.div>
 );
 
-StaticMarker.propTypes = {
-  markerEvents: PropTypes.shape({
-    onClick: PropTypes.func,
-  }),
-};
-
-StaticMarker.defaultProps = {
-  markerEvents: null,
-};
-
-DraggableMarker.propTypes = {
-  markerEvents: PropTypes.shape({
-    onClick: PropTypes.func,
-  }),
-};
-
-DraggableMarker.defaultProps = {
-  markerEvents: null,
-};
-
 const Marker = ({
   markerEvents,
   draggable = false,
@@ -67,6 +47,26 @@ Marker.propTypes = {
 
 Marker.defaultProps = {
   draggable: false,
+  markerEvents: null,
+};
+
+StaticMarker.propTypes = {
+  markerEvents: PropTypes.shape({
+    onClick: PropTypes.func,
+  }),
+};
+
+StaticMarker.defaultProps = {
+  markerEvents: null,
+};
+
+DraggableMarker.propTypes = {
+  markerEvents: PropTypes.shape({
+    onClick: PropTypes.func,
+  }),
+};
+
+DraggableMarker.defaultProps = {
   markerEvents: null,
 };
 

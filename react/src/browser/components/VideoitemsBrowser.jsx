@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import Grid from '@material-ui/core/Grid';
+// import { motion } from 'framer-motion';
+// import Transition from 'react-transition-group/Transition';
 import ThumbnailCard from './ThumbnailCard/ThumbnailCard';
 import Pagination from './Pagination';
 import { useSearchfilters } from '../contexts/SearchfiltersContext';
@@ -102,10 +104,12 @@ export default function VideoitemsBrowser({ toggleModal }) {
     <>
       <div className={`${styles.gridWrapper}`}>
         <Grid className={`${styles.thumbnailGrid}`} container spacing={2}>
-          {
-            items.length ? items : <em>Loading...</em>
-            }
+
+          {items.length
+            ? items
+            : <em>Loading...</em>}
         </Grid>
+
       </div>
 
       <Pagination

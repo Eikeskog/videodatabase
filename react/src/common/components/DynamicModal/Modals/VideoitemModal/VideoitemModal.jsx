@@ -1,10 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Fade } from '@material-ui/core';
 import HorizontalTabs from '../../../TabbedContent/HorizontalTabs/HorizontalTabs';
 import Location from './Location/Location';
 import File from './File/File';
 import Tags from './Tags/Tags';
+import LocationContext from './context/locationContext';
 
+// to do: flytte state og metoder til hooks og context.
 const VideoitemModal = ({
   locationDisplayname,
   mapCenter,
@@ -15,52 +18,53 @@ const VideoitemModal = ({
 }) => {
   const location = {
     header: 'Sted',
-    component: (
-      <Location
-        locationDisplayname={locationDisplayname}
-        mapCenter={mapCenter}
-        videoitemId={videoitemId}
-        nearbyItems={nearbyItems}
-      />
-    ),
+    component: <Fade in><Location /></Fade>,
   };
 
   const date = {
     header: 'Dato',
-    component: <p>test1</p>,
+    component: <Fade in><p>test1</p></Fade>,
   };
 
   const file = {
     header: 'Filinfo',
-    component: <File json={localPaths} />,
+    component: <Fade in><File json={localPaths} /></Fade>,
   };
 
   const lists = {
     header: 'Lister',
-    component: <p>test3</p>,
+    component: <Fade in><p>test3</p></Fade>,
   };
 
   const itemTags = {
     header: 'Tags',
-    component: <Tags tags={tags} />,
+    component: <Fade in><Tags tags={tags} /></Fade>,
   };
 
   const timeline = {
     header: 'Tidslinje',
-    component: <p>test5</p>,
+    component: <Fade in><p>test5</p></Fade>,
   };
 
   return (
-    <HorizontalTabs
-      tabsDict={{
-        location,
-        date,
-        file,
-        lists,
-        itemTags,
-        timeline,
-      }}
-    />
+    <LocationContext
+      videoitemId={videoitemId}
+      locationDisplayname={locationDisplayname}
+      lat={mapCenter.lat}
+      lng={mapCenter.lng}
+      nearbyItems={nearbyItems}
+    >
+      <HorizontalTabs
+        tabsDict={{
+          location,
+          date,
+          file,
+          lists,
+          itemTags,
+          timeline,
+        }}
+      />
+    </LocationContext>
   );
 };
 
@@ -132,7 +136,3 @@ VideoitemModal.defaultProps = {
 };
 
 export default VideoitemModal;
-
-// return (
-//   <HorizontalTabs tabsDict={horizontalTabs} />
-// );

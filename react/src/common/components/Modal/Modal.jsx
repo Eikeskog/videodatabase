@@ -45,9 +45,9 @@ const CloseButton = styled.svg`
 `;
 
 const variants = {
-  initial: { opacity: 0 },
-  isOpen: { opacity: 1, transition: { duration: 0.1 } },
-  exit: { opacity: 0 },
+  initial: { opacity: 0.7 },
+  isOpen: { opacity: 1, transition: { type: 'easeIn', duration: 0.1 } },
+  exit: { opacity: 0.7 },
 };
 
 const Modal = ({
