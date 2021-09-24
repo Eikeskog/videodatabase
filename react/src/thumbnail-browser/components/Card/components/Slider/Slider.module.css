@@ -1,0 +1,60 @@
+.outerWrapper {
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.innerWrapper {
+  opacity: 0;
+  position: relative;
+  text-align: center;
+  margin: 0 auto;
+  width: 60%;
+}
+
+.card:hover .innerWrapper {
+  opacity: 1;
+  transition: 0.4s;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: transparent;
+  border-radius: 2px;
+  outline: none;
+  opacity: 1;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  border: 1px solid var(--tertiary);
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background:  var(--accent);
+  cursor: grab;
+  border-radius: 50%;
+  box-shadow: 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12), 0 3px 5px -1px rgba(0,0,0,0.20);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12), 0 3px 5px -1px rgba(0,0,0,0.20);}
+
+.slider::-webkit-slider-thumb:hover, .slider::-moz-range-thumb:hover #background-fader {
+  opacity: 1;
+}

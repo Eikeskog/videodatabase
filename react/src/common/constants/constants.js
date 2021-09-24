@@ -27,8 +27,8 @@ export const svgIconsBase64 = {
 };
 
 export const directories = {
-  svg_icons: './img/svg/',
-  static_thumbnails: './thumbnails_static/',
+  svg_icons: './img/svg',
+  static_thumbnails: './thumbnails_static',
 };
 
 export const fontAwesomeIconsTest = [

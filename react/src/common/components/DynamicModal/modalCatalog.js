@@ -1,4 +1,4 @@
-import initVideoitemModal from './Modals/VideoitemModal/initVideoitemModal';
+import initVideoitemModal from '../../../modals/VideoitemModal/initVideoitemModal';
 
 const modalCatalog = {
   thumbnailboxOuter: {

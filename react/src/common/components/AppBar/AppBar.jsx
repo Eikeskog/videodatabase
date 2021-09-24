@@ -1,16 +1,15 @@
 import React from 'react';
 import Emoticon from '../Emoticon';
 import ThemeToggler from '../ThemeToggler';
-import FilterDropdownsPanel from '../../../browser/components/SearchfilterDropdowns/FilterDropdownsPanel';
-import SearchfilterChips from '../../../browser/components/SearchfilterChips';
+import Searchfilters from '../../../thumbnail-browser/components/Searchfilters/Searchfilters';
+import FilterChips from '../../../thumbnail-browser/components/Searchfilters/FilterChips/FilterChips';
 import Searchbar from '../Searchbar';
 import Logo from '../Logo';
-import { useSearchfilters } from '../../../browser/contexts/SearchfiltersContext';
+import { useSearchfilters } from '../../../thumbnail-browser/contexts/SearchfiltersContext';
 
 import styles from './AppBar.module.css';
 
 const AppBar = (/* {mode} */) => {
-  // super bad css
   const { activeSearchfilters, removeSearchfilter } = useSearchfilters();
 
   return (
@@ -38,13 +37,13 @@ const AppBar = (/* {mode} */) => {
 
       <div className={`${styles.middleOuterWrapper}`}>
         <div className={`${styles.filterDropdownsWrapper}`}>
-          <FilterDropdownsPanel />
+          <Searchfilters />
         </div>
 
       </div>
 
       <div>
-        <SearchfilterChips
+        <FilterChips
           searchfilters={activeSearchfilters}
           removeSearchfilter={removeSearchfilter}
         />

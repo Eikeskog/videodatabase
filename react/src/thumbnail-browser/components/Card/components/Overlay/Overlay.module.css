@@ -1,0 +1,27 @@
+.wrapper {
+  vertical-align: middle;
+  height: 100%;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  position: absolute;
+}
+
+.wrapper img {
+  border-radius: 50%;
+  background-color: rgba(168, 168, 168, 0.589);
+}
+
+.wrapper img:hover {
+  background-color: rgba(77, 77, 77, 0.226);
+  transition: 0.2s;
+  filter: invert(100%) brightness(80%);
+}
+
+.container {
+  position: relative;
+  margin-left: auto;
+  margin-bottom: auto;
+}

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import AppBar from './common/components/AppBar/AppBar';
-import VideoitemsBrowser from './browser/components/VideoitemsBrowser';
 import DynamicModal from './common/components/DynamicModal/DynamicModal';
-import SearchfiltersContext from './browser/contexts/SearchfiltersContext';
+import ThumbnailBrowser from './thumbnail-browser/ThumbnailBrowser';
+import SearchfiltersContext from './thumbnail-browser/contexts/SearchfiltersContext';
 import usePalette from './common/hooks/usePalette';
 
 import styles from './App.module.css';
@@ -37,7 +37,7 @@ const App = () => {
       <div className={`${palette} ${styles.app}`}>
         <AppBar />
         { modal && modal }
-        <VideoitemsBrowser toggleModal={toggleModal} />
+        <ThumbnailBrowser toggleModal={toggleModal} />
       </div>
     </SearchfiltersContext>
   );
