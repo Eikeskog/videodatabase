@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React from 'react';
 import AppBar from './common/components/AppBar/AppBar';
-import VideoitemsBrowser from './browser/components/VideoitemsBrowser';
-import DynamicModal from './common/components/DynamicModal/DynamicModal';
-import SearchfiltersContext from './browser/contexts/SearchfiltersContext';
+import LoginForm from './common/components/Auth/Login/Login';
+import ThumbnailBrowser from './thumbnail-browser/ThumbnailBrowser';
+import SearchfiltersContext from './thumbnail-browser/contexts/SearchfiltersContext';
+import { useUserContext } from './common/contexts/UserContext/UserContext';
+import useDynamicModal from './common/hooks/useDynamicModal/useDynamicModal';
+
 import usePalette from './common/hooks/usePalette';
-
 import styles from './App.module.css';
-
-axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
-axios.defaults.xsrfCookieName = 'csrftoken';
 
 const App = () => {
   const palette = usePalette();
-  const [modal, setModal] = useState(null);
+  const { modalContent, getModal } = useDynamicModal();
+  const { useAuth: { isLoggedIn } } = useUserContext();
 
   const toggleModal = ({
     openedFromComponent,
@@ -21,26 +20,35 @@ const App = () => {
     innerElementId,
     optionalParams,
   }) => {
-    setModal(
-      <DynamicModal
-        closeModal={() => setModal(null)}
-        openedFromComponent={openedFromComponent}
-        activeModalElement={activeModalElement}
-        innerElementId={innerElementId}
-        optionalParams={optionalParams}
-      />,
-    );
+    getModal({
+      openedFromComponent,
+      activeModalElement,
+      innerElementId,
+      optionalParams,
+    });
   };
 
   return (
-    <SearchfiltersContext>
-      <div className={`${palette} ${styles.app}`}>
-        <AppBar />
-        { modal && modal }
-        <VideoitemsBrowser toggleModal={toggleModal} />
-      </div>
-    </SearchfiltersContext>
+    <>
+      {!isLoggedIn
+        ? <LoginForm />
+        : (
+          <SearchfiltersContext>
+
+            <div className={`${palette} ${styles.app}`}>
+              <AppBar />
+
+              { modalContent && modalContent }
+
+              <ThumbnailBrowser toggleModal={toggleModal} />
+            </div>
+
+          </SearchfiltersContext>
+        )}
+    </>
   );
 };
 
-export default App;
+const MemoizedApp = React.memo(App);
+
+export default MemoizedApp;

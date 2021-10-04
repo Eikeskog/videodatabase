@@ -28,7 +28,7 @@ const ModalContainer = styled(motion.div)`
   border-radius: 12px;
   z-index: 6000;
 `;
-
+//  box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
 const CloseButton = styled.svg`
   width: 20px;
   height: 20px;
@@ -45,9 +45,9 @@ const CloseButton = styled.svg`
 `;
 
 const variants = {
-  initial: { opacity: 0 },
-  isOpen: { opacity: 1, transition: { duration: 0.1 } },
-  exit: { opacity: 0 },
+  initial: { opacity: 0.7 },
+  isOpen: { opacity: 1, transition: { type: 'easeIn', duration: 0.1 } },
+  exit: { opacity: 0.7 },
 };
 
 const Modal = ({
@@ -57,9 +57,7 @@ const Modal = ({
 }) => {
   const ref = useRef();
 
-  useOnClickOutside(ref, () => {
-    closeModal();
-  });
+  useOnClickOutside(ref, () => { closeModal(); });
 
   return (
     <AnimatePresence>

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "aa7f5fdf934909abd00a36f8171973a76fde8b5aedf710d894654e759183c202"
+            "sha256": "d74912cf487232c5092f7b0f97d757321d1ac4f46ed552488c10beab17d2fe2e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,19 +26,19 @@
         },
         "django": {
             "hashes": [
-                "sha256:66c9d8db8cc6fe938a28b7887c1596e42d522e27618562517cc8929eb7e7f296",
-                "sha256:ea735cbbbb3b2fba6d4da4784a0043d84c67c92f1fdf15ad6db69900e792c10f"
+                "sha256:95b318319d6997bac3595517101ad9cc83fe5672ac498ba48d1a410f47afecd2",
+                "sha256:e93c93565005b37ddebf2396b4dc4b6913c1838baa82efdfb79acedd5816c240"
             ],
             "index": "pypi",
-            "version": "==3.2.4"
+            "version": "==3.2.7"
         },
         "django-cors-headers": {
             "hashes": [
-                "sha256:1ac2b1213de75a251e2ba04448da15f99bcfcbe164288ae6b5ff929dc49b372f",
-                "sha256:96069c4aaacace786a34ee7894ff680780ec2644e4268b31181044410fecd12e"
+                "sha256:c28f96b77300efed0ff6b937d9ad2a7e80a7cb3ae5ef14968e793d540600fcd3",
+                "sha256:dc121efc242ebd1acad5df5a3b9907f165beeca3eeb7f839990a71a3771ac4f5"
             ],
             "index": "pypi",
-            "version": "==3.7.0"
+            "version": "==3.9.0"
         },
         "djangorestframework": {
             "hashes": [
@@ -47,6 +47,21 @@
             ],
             "index": "pypi",
             "version": "==3.12.4"
+        },
+        "djangorestframework-jwt": {
+            "hashes": [
+                "sha256:5efe33032f3a4518a300dc51a51c92145ad95fb6f4b272e5aa24701db67936a7",
+                "sha256:ab15dfbbe535eede8e2e53adaf52ef0cf018ee27dbfad10cbc4cbec2ab63d38c"
+            ],
+            "index": "pypi",
+            "version": "==1.11.0"
+        },
+        "pyjwt": {
+            "hashes": [
+                "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e",
+                "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"
+            ],
+            "version": "==1.7.1"
         },
         "pytz": {
             "hashes": [

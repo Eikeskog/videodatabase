@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import styled from 'styled-components';
 import { headerLeftOffset, headerStyle } from './util';
 
@@ -17,12 +17,29 @@ const AccentLine = styled(motion.hr)`
   left: ${(props) => props.left};
 `;
 
-const ActiveComponent = ({ tabsDict, activeTab }) => (
-  <div
-    className={`${styles.content}`}
-  >
-    {tabsDict[activeTab]?.component}
-  </div>
+const variants = {
+  initial: { opacity: 0 },
+  isOpen: { opacity: 1, transition: { type: 'spring', duration: 0.3 } },
+  exit: { opacity: 0 },
+};
+
+const ActiveComponent = ({ tabsDict, activeTab, style }) => (
+  <AnimatePresence>
+    <motion.div
+      initial="initial"
+      animate="isOpen"
+      exit="exit"
+      variants={variants}
+      className={`${styles.content}`}
+      transition="easeIn"
+      style={style}
+    >
+
+      {tabsDict[activeTab]?.component}
+
+    </motion.div>
+  </AnimatePresence>
+
 );
 
 ActiveComponent.propTypes = {
@@ -33,11 +50,13 @@ ActiveComponent.propTypes = {
     }),
   ),
   activeTab: PropTypes.string,
+  style: PropTypes.objectOf(PropTypes.string),
 };
 
 ActiveComponent.defaultProps = {
   tabsDict: {},
   activeTab: null,
+  style: {},
 };
 
 const TabHeader = ({
@@ -94,7 +113,7 @@ const HorizontalTabs = ({
   const [linePosition, setLinePosition] = useState('0');
 
   const tabsCount = Object.keys(tabsDict).length;
-  const headerWidth = `${(100 / tabsCount).toString()}%`;
+  const headerWidth = `${Math.floor((100 / tabsCount)).toString()}%`;
 
   const onTabClick = (index, key) => {
     setLinePosition(() => headerLeftOffset({ tabsCount, index }));
@@ -129,9 +148,14 @@ const HorizontalTabs = ({
 
       </div>
 
-      <div className={`${styles.content}`}>
-        {tabsDict[activeTab]?.component}
-      </div>
+      <ActiveComponent tabsDict={tabsDict} activeTab={activeTab} />
+
+      {/* <ActiveComponent tabsDict={tabsDict} activeTab={activeTab} /> */}
+      {/* <div className={`${styles.content}`}> */}
+      {/* <AnimatePresence>
+          {tabsDict[activeTab]?.component}
+        </AnimatePresence> */}
+      {/* </div> */}
 
     </div>
   );

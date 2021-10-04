@@ -18,7 +18,6 @@ from .models.geotags import (
     GeotagLevel5
 )
 
-
 class LocationFilter(django_filters.FilterSet):
     s = django_filters.CharFilter(method="displayname_filter")
 
@@ -31,7 +30,6 @@ class LocationFilter(django_filters.FilterSet):
                 ids = queryset.filter(id__in=second_ids)[:10]
 
         return ids
-
 
 class VideoitemsFilter(django_filters.FilterSet):
     exif_fps__in = django_filters.CharFilter(method="fps_filter")
@@ -59,7 +57,6 @@ class VideoitemsFilter(django_filters.FilterSet):
 
         return queryset.filter(query)
 
-
     def camera_filter(self, queryset, name, value):
         ids = value.split(",")
         labels = UniqueCamera.objects.filter(
@@ -68,7 +65,6 @@ class VideoitemsFilter(django_filters.FilterSet):
         
         return queryset.filter(exif_camera__in=labels)
 
-
     def fps_filter(self, queryset, name, value):
         ids = value.split(",")
         labels = UniqueFps.objects.filter(
@@ -76,7 +72,6 @@ class VideoitemsFilter(django_filters.FilterSet):
         ).values_list('fps', flat=True)
 
         return queryset.filter(exif_fps__in=labels)
-
 
     def keyword_filter(self, queryset, name, value, filter_method='AND'):
         first_filtering = []
@@ -93,14 +88,13 @@ class VideoitemsFilter(django_filters.FilterSet):
             
         return queryset.filter(videoitem_id__in = first_filtering)
 
-
     def project_filter(self, queryset, name, value):
         return queryset.filter(
             pk__in = LocalFile.objects.filter(
                 directory_id__project_roll_directory_id__project_main_directory_id__project_id__project_id__in = value.split(",")
             ).values_list('videoitem', flat=True))
 
-
+    # rewrite
     def location_displayname_filter(self, queryset, name, value):
         ids = value.split(",")
 

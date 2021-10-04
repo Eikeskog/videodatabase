@@ -1,34 +1,54 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Emoticon from '../Emoticon';
 import ThemeToggler from '../ThemeToggler';
-import FilterDropdownsPanel from '../../../browser/components/SearchfilterDropdowns/FilterDropdownsPanel';
-import SearchfilterChips from '../../../browser/components/SearchfilterChips';
+import Searchfilters from '../../../thumbnail-browser/components/Searchfilters/Searchfilters';
+import FilterChips from '../../../thumbnail-browser/components/Searchfilters/FilterChips/FilterChips';
 import Searchbar from '../Searchbar';
 import Logo from '../Logo';
-import { useSearchfilters } from '../../../browser/contexts/SearchfiltersContext';
+import { useSearchfilters } from '../../../thumbnail-browser/contexts/SearchfiltersContext';
+import { useUserContext } from '../../contexts/UserContext/UserContext';
 
 import styles from './AppBar.module.css';
 
+// in early development
 const AppBar = (/* {mode} */) => {
-  // super bad css
   const { activeSearchfilters, removeSearchfilter } = useSearchfilters();
+  const { useAuth: { user, logOut } } = useUserContext();
 
   return (
     <div className={`${styles.wrapper}`}>
       <div className={`${styles.topOuterWrapper}`}>
         <div className={`${styles.topInnerWrapper}`}>
           <Logo />
-          <div className={`${styles.hallo}`}>
+          {user?.username ? (
+            <p>
+              Hei,
+              {' '}
+              {user.username}
+            </p>
+          ) : <p>Logg inn</p> }
+          <div className={`${styles.leftIcons}`}>
             <ThemeToggler />
-            <ThemeToggler />
-            <ThemeToggler />
-            <ThemeToggler />
+
+            <FontAwesomeIcon
+              icon="fa-solid fa-hashtag"
+              style={{ fontSize: '1.75em', color: 'darkgray' }}
+            />
+            <FontAwesomeIcon icon="fa-regular fa-rectangle-list" style={{ fontSize: '1.75em', color: 'darkgray' }} />
+            <FontAwesomeIcon icon="fa-solid fa-hard-drive" style={{ fontSize: '1.75em', color: 'darkgray' }} />
+
+            <FontAwesomeIcon icon="fa-solid fa-map-marked-alt" style={{ fontSize: '1.75em', color: 'darkgray' }} />
           </div>
           <div className={`${styles.searchbarWrapper}`}>
             <div className={`${styles.searchbar}`}>
               <Searchbar />
-              <div className={`${styles.hei}`}>
-                <Emoticon />
+              <div className={`${styles.rightIcons}`}>
+                <Emoticon onClick={logOut} />
+                <FontAwesomeIcon icon="fa-solid fa-user" />
+                <FontAwesomeIcon icon="fa-solid fa-table-cells-large" />
+                <FontAwesomeIcon icon="fa-solid fa-pencil" />
+                <FontAwesomeIcon icon="fa-solid fa-user-gear" />
               </div>
             </div>
           </div>
@@ -37,14 +57,15 @@ const AppBar = (/* {mode} */) => {
       </div>
 
       <div className={`${styles.middleOuterWrapper}`}>
+
         <div className={`${styles.filterDropdownsWrapper}`}>
-          <FilterDropdownsPanel />
+          <Searchfilters />
         </div>
 
       </div>
 
       <div>
-        <SearchfilterChips
+        <FilterChips
           searchfilters={activeSearchfilters}
           removeSearchfilter={removeSearchfilter}
         />

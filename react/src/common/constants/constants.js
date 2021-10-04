@@ -6,6 +6,7 @@ export const modelNames = {
   disk: 'disk',
   keyword: 'keyword',
   dateRange: 'daterange',
+  lists: 'user_list',
 };
 
 export const languages = {
@@ -18,6 +19,7 @@ export const languages = {
       location: 'sted',
       keyword: 'søkeord',
       fps: 'FPS',
+      lists: 'Lister',
     },
   },
 };
@@ -27,8 +29,8 @@ export const svgIconsBase64 = {
 };
 
 export const directories = {
-  svg_icons: './img/svg/',
-  static_thumbnails: './thumbnails_static/',
+  svg_icons: './img/svg',
+  static_thumbnails: './thumbnails_static',
 };
 
 export const fontAwesomeIconsTest = [

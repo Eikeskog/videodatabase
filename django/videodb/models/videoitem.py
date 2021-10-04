@@ -3,8 +3,6 @@ from django.db.models.expressions import F
 from .geotags import GmapsGpsPoint, GeotagLevel1
 from .local import LocalFile
 
-
-
 class Videoitem(models.Model):
     class Meta:
         db_table = 'videoitem'
@@ -26,7 +24,7 @@ class Videoitem(models.Model):
 
     gmaps_gps_point = models.ForeignKey(to=GmapsGpsPoint, null=True, blank=True, on_delete=models.SET_NULL, related_name='videoitems')
 
-    def get_tags(self):
+    def get_tags(self) -> dict:
         return self.keyword_set.all().annotate(
                 tag_id = F('id'),
                 tag_label = F('keyword'),
@@ -35,7 +33,7 @@ class Videoitem(models.Model):
                 'tag_label',
             )
 
-    def get_gps_suggestions_from_local_dir(self):
+    def get_gps_suggestions_local_dir(self) -> dict:
         data = LocalFile.objects.filter(
             directory_id__in = self.local_paths.all().select_related('directory').values_list('directory_id', flat=True)
         ).select_related(
@@ -54,25 +52,24 @@ class Videoitem(models.Model):
             'displayname_id'
         )
 
-        response = []
-        for row in data:
-            for key, val in row.items():
-                if key == 'geotag_id':
-                    obj = GeotagLevel1.objects.get(pk=val)
-                    print(obj.get_displayname_short())
+        # response = []
+        # for row in data:
+        #     for key, val in row.items():
+        #         if key == 'geotag_id':
+        #             obj = GeotagLevel1.objects.get(pk=val)
+        #             print(obj.get_displayname_short())
                 # if key == 'displayname_id':
                 #     obj = UniqueLocationDisplayname.objects.get(pk=val)
                 #     print(obj.get_displayname_variants())
                 #     print(obj.most_specific_field_value)
                 #     print([obj.get_displayname_short() for obj in obj.geotaglevel1_set.all()])
             
-        print('HOLA')
         return data
 
-    def get_latlng_tuple(self):
+    def get_latlng_tuple(self) -> tuple:
         return (self.gps_lat, self.gps_lng,)
 
-    def get_displayname_short(self):
+    def get_displayname_short(self) -> str:
         if self.gmaps_gps_point:
                 return self.gmaps_gps_point.get_displayname_short()
 

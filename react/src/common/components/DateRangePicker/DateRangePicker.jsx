@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import * as locales from 'react-date-range/dist/locale';
 import { DateRange } from 'react-date-range';
 import SingleChip from '../Chips/SingleChip';
-import { useSearchfilters } from '../../../browser/contexts/SearchfiltersContext';
+// import { useSearchfilters } from '../../../browser/contexts/SearchfiltersContext';
+import { useSearchfilters } from '../../../thumbnail-browser/contexts/SearchfiltersContext';
 import { dateRangeToString, dateRangeToSearchParameter } from '../../utils/utils';
 
 import 'react-date-range/dist/styles.css';

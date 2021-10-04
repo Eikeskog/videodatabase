@@ -28,7 +28,6 @@ export const shortenLocalPath = (str) => {
 };
 
 export const secondsToHms = (seconds) => {
-  // finn ut om det er bedre med js timeformat
   let str = '';
 
   const h = ((seconds - (seconds % 3600)) / 3600) % 60;
@@ -45,7 +44,7 @@ export const secondsToHms = (seconds) => {
 export const getThumbnailUrl = (videoitemId, thumbnailIndex) => {
   if (!videoitemId || !thumbnailIndex) return null;
   const format = thumbnailIndex.toString().padStart(2, '0');
-  return `${directories.static_thumbnails + videoitemId}/${format}.jpg`;
+  return `${directories.static_thumbnails}/${videoitemId}/${format}.jpg`;
 };
 
 export const arrFirstItem = (array) => {

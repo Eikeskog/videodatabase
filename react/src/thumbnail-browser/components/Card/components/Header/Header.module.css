@@ -1,0 +1,32 @@
+.left,
+.right {
+  cursor: pointer;
+}
+
+.left {
+  padding-left: 16px;
+}
+  
+.right {
+  margin-left: auto;
+  padding-right: 16px;
+}
+
+.header {
+  padding-bottom: 4px;
+  padding-top: 6px;
+  display: flex;
+}
+
+.header svg, .footer svg {
+  font-size: 1.4em;
+  /* margin-right: 8px;
+  margin-left: 8px; */
+  vertical-align: bottom;
+  opacity: 1;
+}
+
+.header svg:hover, .footer svg:hover {
+  transition: 0.2s;
+  filter: invert(100%) brightness(100%);
+}

@@ -8,6 +8,7 @@ from .geotags import (
   GeotagLevel5
 )
 
+# early development
 class UniqueSearchfilter(models.Model):
     pass
 
@@ -31,15 +32,6 @@ class UniqueFps(UniqueSearchfilter):
     fps = models.IntegerField(unique=True, null=True, blank=True)
     fps_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
 
-    # @classmethod
-    # def rebuild(cls):
-    #     cls.objects.all().delete()
-    #     unique = set([])
-    #     qs = Videoitem.objects.all().values_list('exif_fps',flat=True)
-    #     [unique.add(x) for x in qs if x is not None]
-    #     for x in unique:
-    #         cls.objects.create(fps = x)
-
     def __str__(self):
         return str(self.fps)
 
@@ -51,16 +43,6 @@ class UniqueKeyword(UniqueSearchfilter):
 
     keyword = models.CharField(max_length=120, unique=True, null=True, blank=True)
     keyword_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
-
-    # @classmethod
-    # def rebuild(cls):
-    #     cls.objects.all().delete()
-    #     unique = set([])
-    #     qs = Keyword.objects.all().values_list('keyword',flat=True)
-    #     [unique.add(x) for x in qs if x is not None]
-
-    #     for x in unique:
-    #         cls.objects.create(keyword = x)
 
     def __str__(self):
         return str(self.keyword)
@@ -86,7 +68,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
 
 
     @classmethod
-    def get_unique_displaynames_any_address_field_startswith(cls, startswith, max=10):
+    def get_unique_displaynames_any_address_field_startswith(cls, startswith: str, max: int = 10):
         # gjøre om til model fields istedetfor json, raskere søk
         results = {}
         c = 0
@@ -108,7 +90,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         return list(set(json.loads(self.unique_json)['displayname_variants']))
 
     @classmethod
-    def sort_objs_on_min_max_address_fields_count(cls, objects_list):
+    def sort_objs_on_min_max_address_fields_count(cls, objects_list: list) -> object:
         copy = [obj for obj in objects_list]
         copy.sort(key=lambda obj: len(obj.get_unique_address_fields_not_null().keys()))
         return copy
@@ -121,7 +103,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         return not_null
 
     @classmethod
-    def compare_addresses_get_parent_difference(cls, obj_min_address_fields, obj_max_address_fields):
+    def compare_addresses_get_parent_difference(cls, obj_min_address_fields: dict, obj_max_address_fields: dict) -> dict:
         field_names = ['county', 'municipality', 'country_code']
 
         for field in field_names:
@@ -140,7 +122,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         return None
 
     @classmethod
-    def is_different_location(cls, obj_min_address_fields, obj_max_address_fields):
+    def is_different_location(cls, obj_min_address_fields: dict, obj_max_address_fields: dict) -> bool:
         def check_field_difference(field_name):
             if field_name not in ['locality', 'postal_town'] and obj_min_address_fields[field_name] != obj_max_address_fields[field_name]:
                 return True
@@ -168,7 +150,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         return False
         
     @classmethod
-    def solve_name_clash(cls, existing_obj, new_obj):
+    def solve_name_clash(cls, existing_obj: object, new_obj: object) -> str:
         (obj_min, obj_max) = cls.sort_objs_on_min_max_address_fields_count([existing_obj, new_obj,])
 
         obj_min_address_fields = obj_min.get_unique_address_fields_not_null()
@@ -197,7 +179,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
 
         return 'SOLVED'
 
-    def get_first_parent_field_value(self, from_field=None):
+    def get_first_parent_field_value(self, from_field: str = None) -> str:
         child_parent_dict = dict(
             locality = ['postal_town', 'municipality', 'county'],
             postal_town = 'municipality',
