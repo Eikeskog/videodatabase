@@ -16,9 +16,6 @@ const Slider = ({
         opacity: display
           ? 1
           : 0,
-        // width: display
-        //   ? '60%'
-        //   : '0%',
       }}
       initial={false}
       transition="easeIn"

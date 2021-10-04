@@ -1,48 +1,50 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Fade } from '@material-ui/core';
 import VideoitemContext from './context/context';
 import HorizontalTabs from '../../common/components/TabbedContent/HorizontalTabs/HorizontalTabs';
 import File from './components/File/File';
 import Tags from './components/Tags/Tags';
 import Location from './components/Location/Location';
+import Lists from './components/Lists/Lists';
 
+// early progress/simple demo
 const VideoitemModal = ({
   locationDisplayname,
   mapCenter,
   videoitemId,
   nearbyItems,
   localPaths,
+  userLists,
   tags,
 }) => {
   const location = {
     header: 'Sted',
-    component: <Fade in><Location /></Fade>,
+    component: <Location />,
   };
 
   const date = {
     header: 'Dato',
-    component: <Fade in><p>test1</p></Fade>,
+    component: <p>test1</p>,
   };
 
   const file = {
     header: 'Filinfo',
-    component: <Fade in><File json={localPaths} /></Fade>,
+    component: <File json={localPaths} />,
   };
 
   const lists = {
     header: 'Lister',
-    component: <Fade in><p>test3</p></Fade>,
+    component: <Lists />,
   };
 
   const itemTags = {
     header: 'Tags',
-    component: <Fade in><Tags tags={tags} /></Fade>,
+    component: <Tags tags={tags} />,
   };
 
   const timeline = {
     header: 'Tidslinje',
-    component: <Fade in><p>test5</p></Fade>,
+    component: <p>test5</p>,
   };
   return (
     <VideoitemContext
@@ -51,6 +53,7 @@ const VideoitemModal = ({
       lat={mapCenter.lat}
       lng={mapCenter.lng}
       nearbyItems={nearbyItems}
+      userLists={userLists}
     >
       <HorizontalTabs
         tabsDict={{
@@ -64,26 +67,6 @@ const VideoitemModal = ({
       />
     </VideoitemContext>
   );
-  // return (
-  //   <LocationContext
-  //     videoitemId={videoitemId}
-  //     locationDisplayname={locationDisplayname}
-  //     lat={mapCenter.lat}
-  //     lng={mapCenter.lng}
-  //     nearbyItems={nearbyItems}
-  //   >
-  //     <HorizontalTabs
-  //       tabsDict={{
-  //         location,
-  //         date,
-  //         file,
-  //         lists,
-  //         itemTags,
-  //         timeline,
-  //       }}
-  //     />
-  //   </LocationContext>
-  // );
 };
 
 VideoitemModal.propTypes = {
@@ -142,6 +125,14 @@ VideoitemModal.propTypes = {
       tag_label: PropTypes.string,
     }),
   ),
+  userLists: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      modified: PropTypes.string,
+      user_id: PropTypes.string,
+      label: PropTypes.string,
+    }),
+  ),
 };
 
 VideoitemModal.defaultProps = {
@@ -151,6 +142,7 @@ VideoitemModal.defaultProps = {
   nearbyItems: null,
   localPaths: null,
   tags: null,
+  userLists: null,
 };
 
 export default VideoitemModal;

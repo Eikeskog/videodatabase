@@ -75,10 +75,10 @@ const ControlledMapCanvas = ({
           key={key}
           lat={markersState[key]?.lat}
           lng={markersState[key]?.lng}
-          // markerEvents={markerEvents?.[key]}
           draggable={markersState[key]?.draggable}
-          // color={markerColors?.[key]}
-          // size={markerSizes?.[key]}
+          // events={markersState[key]?.events}
+          // color={markersState[key]?.color}
+          // size=markersState[key]?.size}
         />
       )) }
 
@@ -95,20 +95,6 @@ ControlledMapCanvas.propTypes = {
     zoom: PropTypes.number,
     draggable: PropTypes.bool,
   }),
-  // setMapState: PropTypes.func,
-  // markers: PropTypes.objectOf(
-  //   PropTypes.shape({
-  //     lat: PropTypes.number,
-  //     lng: PropTypes.number,
-  //     color: PropTypes.string,
-  //     size: PropTypes.number,
-  //     draggable: PropTypes.bool,
-  //     markerEvents: PropTypes.objectOf(
-  //       PropTypes.func,
-  //     ),
-  //   }),
-  // ),
-  // onMarkerChange: PropTypes.func,
   onMapChange: PropTypes.func,
   onMarkerChange: PropTypes.func,
   markersState: PropTypes.objectOf(
@@ -116,21 +102,17 @@ ControlledMapCanvas.propTypes = {
       lat: PropTypes.number,
       lng: PropTypes.number,
       draggable: PropTypes.bool,
+      // color: PropTypes.string,
+      // size: PropTypes.number,
+      // events: PropTypes.objectOf(
+      //   PropTypes.func,
+      // ),
     }),
   ),
-  // setMapState: PropTypes.func,
-  // setMarker: PropTypes.func,
 };
 
 ControlledMapCanvas.defaultProps = {
   mapState: null,
-  // setMapState: null,
-  // setMarker: null,
-  // setMapState: null,
-  // center: null,
-  // zoom: null,
-  // markers: null,
-  // onMarkerChange: null,
   onMapChange: null,
   onMarkerChange: null,
   markersState: null,

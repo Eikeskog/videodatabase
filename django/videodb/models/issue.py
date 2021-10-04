@@ -1,18 +1,17 @@
 from django.db import models
-
+import uuid
 
 class VideoitemIssue(models.Model):
     class Meta:
         db_table = 'videoitem_issue'
 
-    issue_id = models.CharField(max_length=16, primary_key=True)
+    issue_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     missing_file_db_fullpath = models.CharField(max_length=255, null=True, blank=True)
     missing_file_last_writetime = models.DateTimeField(null=True, blank=True)
     missing_file_project_id = models.CharField(max_length=255, null=True, blank=True)
 
-    process = models.CharField(max_length=255, null=True, blank=True)
-    process_uuid = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=255, null=True, blank=True)
 
     located_fullpath = models.CharField(max_length=255, null=True, blank=True)
     located_datetime = models.DateTimeField(null=True, blank=True)

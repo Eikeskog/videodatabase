@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-// import { useSearchfilters } from '../../../../browser/contexts/SearchfiltersContext';
 import { useSearchfilters } from '../../../contexts/SearchfiltersContext';
 import { renderCheckboxList } from './util';
 

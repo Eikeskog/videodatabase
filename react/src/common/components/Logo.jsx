@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 
-const StyledLogo = styled(motion.button)`
+const StyledLogo = styled(motion.div)`
   font-size: 1.2rem;
   padding: 20px;
   border-radius: 50px;
@@ -10,6 +10,7 @@ const StyledLogo = styled(motion.button)`
   background-color: #5c3aff;
   color: white;
 `;
+// #5c3aff
 
 const Logo = () => (
   <StyledLogo

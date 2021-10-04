@@ -6,6 +6,7 @@ export const modelNames = {
   disk: 'disk',
   keyword: 'keyword',
   dateRange: 'daterange',
+  lists: 'user_list',
 };
 
 export const languages = {
@@ -18,6 +19,7 @@ export const languages = {
       location: 'sted',
       keyword: 'søkeord',
       fps: 'FPS',
+      lists: 'Lister',
     },
   },
 };

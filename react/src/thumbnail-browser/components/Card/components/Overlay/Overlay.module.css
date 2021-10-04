@@ -2,26 +2,34 @@
   vertical-align: middle;
   height: 100%;
   width: 100%;
-  z-index: 10;
+  z-index: 5;
   display: flex;
   align-items: center;
   align-content: center;
   position: absolute;
 }
 
-.wrapper img {
-  border-radius: 50%;
-  background-color: rgba(168, 168, 168, 0.589);
-}
-
-.wrapper img:hover {
-  background-color: rgba(77, 77, 77, 0.226);
-  transition: 0.2s;
-  filter: invert(100%) brightness(80%);
-}
-
 .container {
   position: relative;
   margin-left: auto;
   margin-bottom: auto;
+  padding: 0.3em;
+}
+
+.container svg {
+  background-color:rgb(69, 121, 190);
+  color:rgb(31, 40, 58);
+  padding: 8px;
+  border-radius: 50%;
+  margin: 4px;
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.14), 0 2px 1px -1px rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+  font-size: 2em;
+  cursor: pointer;
+  width: 1em;
+  height: 1em;
+}
+
+.container svg:hover {
+  color:rgb(69, 121, 190);
+  background-color:rgb(31, 40, 58);
 }

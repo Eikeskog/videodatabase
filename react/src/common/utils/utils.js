@@ -28,7 +28,6 @@ export const shortenLocalPath = (str) => {
 };
 
 export const secondsToHms = (seconds) => {
-  // finn ut om det er bedre med js timeformat
   let str = '';
 
   const h = ((seconds - (seconds % 3600)) / 3600) % 60;

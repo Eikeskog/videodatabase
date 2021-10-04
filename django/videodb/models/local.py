@@ -47,7 +47,7 @@ class RootDirectory(models.Model):
     disk = models.ForeignKey(to=Disk, null=True, blank=True, on_delete=models.CASCADE)
 
     @classmethod
-    def path_as_instance(cls, path):
+    def path_as_instance(cls, path: str) -> object:
         if not path:
             return None
         obj = cls.objects.filter(path = path).first()
@@ -76,7 +76,7 @@ class ProjectMainDirectory(models.Model):
     root_directory = models.ForeignKey(to='RootDirectory', null=True, blank=True, on_delete=models.CASCADE)
 
     @classmethod
-    def path_as_instance(cls, path):
+    def path_as_instance(cls, path: str) -> object:
         if not path:
             return None
         obj = cls.objects.filter(path = path).first()
@@ -108,8 +108,9 @@ class ProjectRollDirectory(models.Model):
 
     project_main_directory = models.ForeignKey(to=ProjectMainDirectory, null=True, blank=True, on_delete=models.CASCADE)
 
+    # rydd opp
     @classmethod
-    def path_as_instance(cls, path):
+    def path_as_instance(cls, path: str) -> object:
         if not path:
             return None
         obj = cls.objects.filter(path = path).first()
@@ -141,7 +142,7 @@ class LocalDirectory(models.Model):
     project_roll_directory = models.ForeignKey(to=ProjectRollDirectory, null=True, blank=True, on_delete=models.CASCADE)
 
     @classmethod
-    def path_as_instance(cls, path):
+    def path_as_instance(cls, path: str) -> object:
         if not path:
             return None
         obj = cls.objects.filter(path = path).first()
@@ -174,7 +175,7 @@ class LocalFile(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     directory = models.ForeignKey(to=LocalDirectory, on_delete=models.SET_NULL, null=True, blank=True)
 
-    def get_directory(self):
+    def get_directory(self) -> dict:
         directory = self.directory
         return {
             'id': directory.id,
@@ -194,7 +195,7 @@ class LocalFile(models.Model):
             )
         }
 
-    def get_project(self):
+    def get_project(self) -> dict:
         project = self.directory.project_roll_directory.project_main_directory.project
 
         return {
@@ -202,7 +203,7 @@ class LocalFile(models.Model):
             'name': project.name
         }
 
-    def get_disk(self):
+    def get_disk(self) -> dict:
         disk = self.directory.project_roll_directory.project_main_directory.root_directory.disk
         return {
             'id': disk.disk_serial_number,

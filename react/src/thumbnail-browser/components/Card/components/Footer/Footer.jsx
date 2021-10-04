@@ -56,7 +56,7 @@ const Footer = ({
   >
     <Left display={!displaySlider}>
       <SingleChip>{`${fps} fps`}</SingleChip>
-      <SingleChip>{secondsToHms(duration)}</SingleChip>
+      <SingleChip>{`${secondsToHms(duration)}`}</SingleChip>
     </Left>
 
     <Right display={!displaySlider}>

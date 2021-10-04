@@ -2,7 +2,6 @@ import re
 from django.db import models
 from .unique_searchfilter import UniqueKeyword
 
-
 class Keyword(models.Model):
     class Meta:
         db_table = 'keyword'
@@ -13,15 +12,17 @@ class Keyword(models.Model):
     videoitem = models.ForeignKey(to='Videoitem', blank=True, null=True, on_delete=models.CASCADE)
     unique_keyword = models.ForeignKey(to='UniqueKeyword', blank=True, null=True, on_delete=models.SET_NULL, related_name='keyword_videoitem_link')
 
+    # ta dette ut av model
     @classmethod
-    def clean_string(cls, string):
+    def clean_string(cls, string: str) -> str:
         string = string.lower().strip()
         if string[-1] in [',', '.']:
             return cls.clean_string(string[:-1])
         return string
 
+    # og dette
     @classmethod
-    def validate_string(cls, string):
+    def validate_string(cls, string: str) -> str:
         pattern = "^[4-9][a-cA-C\+-]?[\+-]?$|^[a-zA-ZæøåÆØÅ][a-zA-ZæøåÆØÅ]+$"
         string = cls.clean_string(string)
         if not re.search(pattern, string):

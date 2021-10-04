@@ -1,11 +1,11 @@
 import modalCatalog from './modalCatalog';
 
-const initModal = (
+const initModal = ({
   openedFromComponent,
   innerElementId,
   activeModalElement,
   optionalParams,
-) => {
+}) => {
   const { apiUrl, getResponseHandler } = modalCatalog[openedFromComponent];
   const { handler } = getResponseHandler(activeModalElement, optionalParams);
   const url = apiUrl(innerElementId);

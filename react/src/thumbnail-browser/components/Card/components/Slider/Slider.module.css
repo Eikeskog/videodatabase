@@ -1,6 +1,6 @@
 .outerWrapper {
   position: absolute;
-  bottom: 8px;
+  bottom: 10px;
   width: 100%;
   margin: 0 auto;
 }
@@ -10,7 +10,7 @@
   position: relative;
   text-align: center;
   margin: 0 auto;
-  width: 60%;
+  width: 65%;
 }
 
 .card:hover .innerWrapper {
@@ -22,14 +22,19 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 5px;
-  background: transparent;
+  height: 3px;
+  /* background: var(--accent); */
+  
+  /* background: rgba(160,130,170,0.6); */
+  background: rgba(160,150,170,0.6);
   border-radius: 2px;
   outline: none;
   opacity: 1;
   -webkit-transition: .2s;
   transition: opacity .2s;
-  border: 1px solid var(--tertiary);
+  border: 0;
+  /* border: 1px solid var(--tertiary); */
+  /* border: 1px solid var(--accent); */
 }
 
 .slider:hover {

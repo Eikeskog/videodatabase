@@ -1,22 +1,42 @@
 import { useRef, useState } from 'react';
-import axios from 'axios';
 
-const useTypingHints = (itemType) => {
+import { useUserContext } from '../contexts/UserContext/UserContext';
+import urls from '../../dev_urls';
+
+const BASE_URL = urls.TYPING_HINTS;
+
+const fetch = async ({
+  authorizedFetch, itemType, ref, handleResponse, handleError,
+}) => {
+  authorizedFetch({
+    method: 'get',
+    url: `${BASE_URL}${itemType}/?s=${ref?.current?.value}`,
+    handleResponse,
+    handleError,
+  });
+};
+
+const useTypingHints = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [results, setResults] = useState([]);
 
+  const { useAuthorizedFetch } = useUserContext();
+  const { authorizedFetch } = useAuthorizedFetch;
+
   const ref = useRef();
 
-  const fetch = async () => {
-    const url = `http://localhost:8000/api/typinghints/${itemType}/?s=${ref?.current?.value}`;
-
-    const { data } = await axios.get(url);
-    setResults(() => data && data);
+  const handleResponse = (data) => {
+    setResults(() => data);
     setIsLoading(false);
   };
 
-  const onChange = () => {
+  const handleError = (error) => {
+    console.log(error);
+    setIsLoading(false);
+  };
+
+  const onChange = (itemType) => {
     if (!ref?.current?.value) {
       setIsTyping(false);
       setIsLoading(false);
@@ -24,7 +44,9 @@ const useTypingHints = (itemType) => {
     }
     setIsTyping(true);
     setIsLoading(true);
-    fetch();
+    fetch({
+      authorizedFetch, itemType, ref, handleResponse, handleError,
+    });
   };
 
   const resetHints = () => {

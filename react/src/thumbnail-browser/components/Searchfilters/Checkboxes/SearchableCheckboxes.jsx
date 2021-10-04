@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-// import { useSearchfilters } from '../../../../browser/contexts/SearchfiltersContext';
 import { useSearchfilters } from '../../../contexts/SearchfiltersContext';
 import useTypingHints from '../../../../common/hooks/useTypingHints';
 import { renderCheckboxList, renderTypingHints } from './util';
@@ -16,7 +15,7 @@ const SearchableCheckboxes = ({
     toggleActiveSearchfilter,
   } = useSearchfilters();
 
-  const typingHints = useTypingHints(filterType);
+  const typingHints = useTypingHints();
 
   return (
     <>
@@ -24,7 +23,7 @@ const SearchableCheckboxes = ({
         className={styles.textInput}
         type="text"
         ref={typingHints.ref}
-        onChange={typingHints.onChange}
+        onChange={() => typingHints.onChange(filterType)}
         placeholder="Søk i database"
       />
 

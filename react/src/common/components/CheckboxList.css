@@ -12,9 +12,6 @@ ul.checkbox-list {
   padding-bottom: 8px;
 }
 
-  /* .checkbox-list li:nth-of-type(n + 2) {
-    margin-top: 0px; } */
-
 .checkbox-list label {
   display: block;
   width: calc(100%);

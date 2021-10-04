@@ -1,19 +1,20 @@
+
+from timeit import default_timer as timer
+from django.forms.models import model_to_dict
+
+from django.http.response import JsonResponse
 from rest_framework import serializers
 from .utils.functions.videoitem import get_nearby_videoitems 
 from .models.videoitem import Videoitem
 from .models.project import Project
+from .models.local import Disk, LocalFile
+from .models.videoitems_list import VideoitemsList
 from .models.unique_searchfilter import (
     UniqueLocationDisplayname,
     UniqueKeyword,
     UniqueCamera,
     UniqueFps)
-from .models.local import (
-    Disk,
-    # LocalDirectory,
-    # ProjectRollDirectory,
-    LocalFile
-)
-from timeit import default_timer as timer
+
 
 class UniqueSearchfiltersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,6 +113,10 @@ class UniqueSearchfiltersSerializer(serializers.ModelSerializer):
             'count': len(location_names),
         }
 
+        data["lists"] = {
+            'items': {}
+        }
+
         return data
 
 
@@ -132,13 +137,37 @@ class LocalFileSerializer(serializers.ModelSerializer):
         return data
 
 
+class VideoitemsListSerializer(serializers.ModelSerializer):
+    videoitems = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VideoitemsList
+        fields = '__all__'
+        depth = 1
+
+    def get_videoitems(self, obj):
+        videoitems = obj.videoitems.all().values('videoitem_id', 'static_thumbnail_count')
+        return videoitems
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return data
+
+
+
 class VideoitemEntrySerializer(serializers.ModelSerializer):
     local_paths = LocalFileSerializer(many=True)
+    videoitems_list_set = serializers.SerializerMethodField()
 
     class Meta:
         model = Videoitem
         fields = '__all__'
         depth = 2
+
+    def get_videoitems_list_set(self, obj):
+        # videoitems_list_set = obj.videoitems_list_set.all().values('id', 'modified', 'user_id', 'label')
+        # return videoitems_list_set
+        return '...'
 
     def validate(self, data):
         return super().validate(data)
@@ -147,39 +176,18 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
         t0 = timer()
         data = super().to_representation(instance)
         data['location_displayname'] = instance.get_displayname_short()
+        # nearby items er en bottleneck som tar ca 100 ms å kjøre sånn det er nå. 
+
+        # mulige alternativer for løsninger:
+        # bruke geospatial fields på modeller(gps-punkt og bbox), cache, webworkers, lazy load.
+        # selve funksjonen gjør også mye nå, så skrive om (kutte ned på hva den gjør) ... 
         data['nearby_items'] = get_nearby_videoitems(instance) if instance.gmaps_gps_point is not None else None
         data['tags'] = instance.get_tags()
-        data['location_suggestions'] = instance.get_gps_suggestions_from_local_dir()
-
-        # data['test'] = instance.local_paths.all().select_related('directory').values_list(flat=True)
-
-        # test
-        # test = UniqueLocationDisplayname.get_unique_displaynames_any_field_startswith('agder')
-        # print(test)
-        # test = GeotagLevel1.objects.all()[:3]
-
-        # for obj in Videoitem.objects.exclude(gps_lat__isnull=True):
-        #     if obj.gmaps_gps_point:
-        #         gps = obj.gmaps_gps_point 
-        #         obj.gmaps_gps_point = None
-        #         obj.save()
-        #         gps.delete()
-        
-        # test2 = sorted(
-        #     GeotagLevel1.objects.all()[:3],
-        #     key=lambda x: (x.get_boundingbox_areal()) # and if gross is the same, for the gross same objects, x.updated and then update was also the same, x.pk,
-        # )
-
-        # print('\n\n\n\nTESTING:\n')
-        # for t in test2:
-        #     print(t.get_boundingbox_areal())
+        data['location_suggestions'] = instance.get_gps_suggestions_local_dir()
 
         t1 = timer()
         print('elapsed:',t1-t0)
         return data
-
-
-
 
 class TypingHintsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -207,13 +215,5 @@ class VideoitemsSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["location_displayname_short"] = instance.get_displayname_short()
-        # instance.gmaps_gps_point = None
-        # instance.save()
-        # if instance.gmaps_gps_point is not None:
-        #     gps_point = instance.gmaps_gps_point
-        #     instance.gmaps_gps_point = None
-        #     instance.save()
-        #     gps_point.delete()
-        
 
         return data

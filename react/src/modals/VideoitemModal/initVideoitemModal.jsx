@@ -10,8 +10,14 @@ const initVideoitemModal = (
     location_displayname: locationDisplayname,
     videoitem_id: videoitemId,
     local_paths: localPaths,
+    userlist_set: userLists,
     tags,
   } = data;
+
+  /*
+    logic for displaying modal content based on API response.
+    (e.g. displaying components for geotag suggestions, if item is missing gps point.)
+  */
 
   if (!gpsPoint || !gpsPoint?.geotag_level_1) return <span>not implemented</span>;
 
@@ -25,6 +31,7 @@ const initVideoitemModal = (
       locationDisplayname={locationDisplayname}
       nearbyItems={nearbyItems}
       localPaths={localPaths}
+      userLists={userLists}
       tags={tags}
     />
   );

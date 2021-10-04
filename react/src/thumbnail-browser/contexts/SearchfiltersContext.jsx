@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from 'react';
 import PropTypes from 'prop-types';
 import prepareRestParams from '../utils/prepareRestParams';
@@ -35,8 +36,7 @@ const Context = createContext({
 export const useSearchfilters = () => useContext(Context);
 
 const SearchfiltersContext = ({ children }) => {
-  const [active, setActive] = useState(initialValue.activeSearchfilters);
-  const [restApiParams, setRestApiParams] = useState(initialValue.restApiParams);
+  const [active, setActive] = useState(() => initialValue.activeSearchfilters);
 
   const addFilter = (filterType, id, name) => {
     if (!Object.keys(initialValue.activeSearchfilters).includes(filterType)) return;
@@ -46,7 +46,7 @@ const SearchfiltersContext = ({ children }) => {
   };
 
   const removeFilter = (filterType, id) => {
-    const newState = active[filterType];
+    const newState = active?.[filterType];
     if (!newState) return;
     delete newState[id];
     setActive((prevState) => ({
@@ -65,18 +65,13 @@ const SearchfiltersContext = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('activeSearchfilters', JSON.stringify(active));
-    setRestApiParams(prepareRestParams(active));
   }, [active]);
-
-  useEffect(() => {
-    localStorage.setItem('activeSearchfiltersApiParams', JSON.stringify(restApiParams));
-  }, [restApiParams]);
 
   return (
     <Context.Provider
       value={{
         activeSearchfilters: active,
-        restApiParams,
+        restApiParams: useMemo(() => prepareRestParams(active), [active]),
         addSearchfilter: addFilter,
         removeSearchfilter: removeFilter,
         toggleActiveSearchfilter: toggleFilter,

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
-import AccessTimeIcon from '@material-ui/icons/AccessTime';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import styles from './Overlay.module.css';
 
@@ -15,8 +15,9 @@ const Overlay = ({ display }) => (
     transition="easeIn"
   >
     <div className={`${styles.container}`}>
-      <AccessTimeIcon />
-      <AccessTimeIcon />
+      <FontAwesomeIcon icon="fa-regular fa-heart" />
+      <FontAwesomeIcon icon="fa-solid fa-circle-info" />
+      {/* <FontAwesomeIcon icon="fa-solid fa-heart" /> */}
     </div>
   </motion.div>
 );

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { AnimatePresence, motion } from 'framer-motion';
 import styled from 'styled-components';
-// import { Transition } from 'react-transition-group';
 import { headerLeftOffset, headerStyle } from './util';
 
 import styles from './HorizontalTabs.module.css';

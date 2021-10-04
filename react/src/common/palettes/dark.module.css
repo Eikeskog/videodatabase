@@ -1,7 +1,7 @@
 .colors  {
   --primary: #000000;
   --secondary: #ffffff;
-  --tertiary: #808080;
+  --tertiary: rgb(170, 170, 170);
 
   --accent: #3498DB;
   --active: #1ABC9C;

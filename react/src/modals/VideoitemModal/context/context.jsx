@@ -30,6 +30,7 @@ const VideoitemContext = ({
   lng: initalLng,
   nearbyItems,
   locationDisplayname: initalLocationDisplayName,
+  userLists: initialUserLists,
   children,
 }) => {
   const locationState = useLocationState({
@@ -38,12 +39,15 @@ const VideoitemContext = ({
     lng: initalLng,
     nearbyItems,
     locationDisplayname: initalLocationDisplayName,
+    userLists: initialUserLists,
   });
 
   return (
     <Context.Provider
       value={{
         useLocationState: locationState,
+        userLists: initialUserLists,
+        videoitemId,
       }}
     >
       {children}

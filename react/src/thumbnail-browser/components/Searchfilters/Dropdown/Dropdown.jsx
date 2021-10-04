@@ -37,7 +37,7 @@ const Header = ({
   toggle,
   onClick,
 }) => {
-  const label = capitalizeFirstChar(languages.NO.filterTypes[filterType]);
+  const label = `${capitalizeFirstChar(languages.NO.filterTypes[filterType])}`;
 
   return (
     <button
@@ -51,18 +51,6 @@ const Header = ({
       {label}
     </button>
   );
-};
-
-Header.propTypes = {
-  filterType: PropTypes.string,
-  toggle: PropTypes.bool,
-  onClick: PropTypes.func,
-};
-
-Header.defaultProps = {
-  filterType: '',
-  toggle: false,
-  onClick: null,
 };
 
 const Dropdown = ({
@@ -107,6 +95,20 @@ const Dropdown = ({
   );
 };
 
+export default Dropdown;
+
+Header.propTypes = {
+  filterType: PropTypes.string,
+  toggle: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+
+Header.defaultProps = {
+  filterType: '',
+  toggle: false,
+  onClick: null,
+};
+
 Dropdown.propTypes = {
   filterType: PropTypes.string,
   InnerComponent: PropTypes.node,
@@ -116,5 +118,3 @@ Dropdown.defaultProps = {
   filterType: '',
   InnerComponent: null,
 };
-
-export default Dropdown;

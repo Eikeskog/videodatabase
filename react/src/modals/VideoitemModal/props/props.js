@@ -56,6 +56,14 @@ export const propTypes = {
       tag_label: PropTypes.string,
     }),
   ),
+  userLists: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      modified: PropTypes.string,
+      user_id: PropTypes.string,
+      label: PropTypes.string,
+    }),
+  ),
 };
 
 export const defaultProps = {
@@ -65,4 +73,5 @@ export const defaultProps = {
   nearbyItems: null,
   localPaths: null,
   tags: null,
+  userLists: null,
 };

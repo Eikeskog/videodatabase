@@ -1,9 +1,7 @@
-import {
-  useState,
-  useMemo,
-} from 'react';
+import { useState, useMemo } from 'react';
 import { throttle } from 'lodash';
 
+// early progress/simple demo
 const useLocationState = ({
   videoitemId,
   lat: initalLat,
@@ -30,7 +28,6 @@ const useLocationState = ({
   });
 
   const [nearbyItems, setNearbyItems] = useState(initialNearbyItems);
-
   const [locationDisplayname, setLocationDisplayname] = useState(initalLocationDisplayName);
 
   const handleConfirmedDatabaseUpdate = ({ params }) => {

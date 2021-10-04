@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
-import PlaceIcon from '@material-ui/icons/Place';
+// import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
+// import PlaceIcon from '@material-ui/icons/Place';
 
 import styles from './Header.module.css';
 
@@ -31,19 +31,24 @@ const Header = ({
 }) => (
   <div className={`${styles.header}`}>
     <Left>
-      <CalendarTodayIcon />
+      {/* <CalendarTodayIcon />
+      {' '} */}
       {date}
     </Left>
 
     <Right
       onClick={() => openModal('locationDisplayname')}
     >
-      <PlaceIcon />
+      {/* <PlaceIcon />
+      {' '} */}
       {locationDisplayname}
+
     </Right>
 
   </div>
 );
+
+export default Header;
 
 Header.propTypes = {
   date: PropTypes.string,
@@ -74,5 +79,3 @@ Right.defaultProps = {
   children: null,
   onClick: null,
 };
-
-export default Header;
