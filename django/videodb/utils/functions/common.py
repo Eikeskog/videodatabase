@@ -1,4 +1,5 @@
-import re, decimal
+import re
+import decimal
 from pathlib import Path
 
 def is_all_numeric(args):

@@ -1,4 +1,5 @@
-import math, decimal
+import math
+import decimal
 import geopy.distance
 from .common import (
     is_all_numeric,
