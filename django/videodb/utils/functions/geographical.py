@@ -36,9 +36,11 @@ def get_bounding_box(latitude_in_degrees, longitude_in_degrees, half_side_in_km)
 def get_boundingboxes_incremental_steps(
     lat,
     lng,
-    steps_m = [100, 250, 500, 1000, 2500],
+    steps_m = None,
     exclude_prev_step_inner = True
 ):
+    if steps_m is None:
+        steps_m = [100, 250, 500, 1000, 2500]
     if not is_all_numeric([lat, lng]):
         return None
 
