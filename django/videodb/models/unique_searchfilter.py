@@ -318,7 +318,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
 
             _json = json.dumps(geotag_displayname_alternatives, sort_keys=True)
 
-            if not _json in unique_displayname_groupings_json:
+            if _json not in unique_displayname_groupings_json:
                 unique_displayname_groupings_json.append(_json)
                 geotag_displayname_alternatives['json'] = _json
             else:
