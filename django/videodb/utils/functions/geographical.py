@@ -7,9 +7,12 @@ from .common import (
 )
 
 def get_bounding_box(latitude_in_degrees, longitude_in_degrees, half_side_in_km):
-    assert half_side_in_km > 0
-    assert latitude_in_degrees >= -90.0 and latitude_in_degrees <= 90.0
-    assert longitude_in_degrees >= -180.0 and longitude_in_degrees <= 180.0
+    if half_side_in_km <= 0:
+        raise AssertionError
+    if not (latitude_in_degrees >= -90.0 and latitude_in_degrees <= 90.0):
+        raise AssertionError
+    if not (longitude_in_degrees >= -180.0 and longitude_in_degrees <= 180.0):
+        raise AssertionError
 
     lat = math.radians(latitude_in_degrees)
     lng = math.radians(longitude_in_degrees)
