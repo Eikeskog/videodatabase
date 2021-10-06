@@ -30,7 +30,7 @@
 
 .rdrMonthPicker select {
   border-radius: 10px;
-  border: 0px;
+  border: 0;
 }
 
 .rdrDateDisplayItemActive input{
@@ -58,7 +58,7 @@
     -moz-appearance: none;
     appearance: none;
     -webkit-appearance: none;
-    padding: 4px 20px 4px 20px;
+    padding: 4px 20px;
     border-radius: 10px;
     outline: 0;
     color: var(--secondary);
@@ -74,7 +74,7 @@
 }
 
 .rdrMonthPicker, .rdrYearPicker{
-  margin:2px 2px 0px 0px;
+  margin:2px 2px 0 0;
   border: 0;
 }
 
@@ -114,21 +114,21 @@
     text-align: center;
     border-style: solid;
     margin: auto;
-    transform: translate(-3px, 0px);
+    transform: translate(-3px, 0);
 
   }
 
 .rdrPprevButton i {
     border-width: 4px 6px 4px 4px;
     border-color: transparent rgb(201, 201, 201) transparent transparent;
-    transform: translate(-3px, 0px);
+    transform: translate(-3px, 0);
   }
 
 .rdrNextButton i {
     margin: 0 0 0 7px;
     border-width: 4px 4px 4px 6px;
     border-color: transparent transparent transparent rgb(201, 201, 201);
-    transform: translate(-3px, 0px);
+    transform: translate(-3px, 0);
   }
 
 .rdrWeekDays {
@@ -258,14 +258,14 @@
     border-top-left-radius: 1.333em;
     border-bottom-left-radius: 1.333em;
     border-left-width: 1px;
-    left: 0px;
+    left: 0;
   }
 
 .rdrDayEndOfMonth .rdrDayInPreview, .rdrDayEndOfMonth .rdrDayStartPreview, .rdrDayEndOfWeek .rdrDayInPreview, .rdrDayEndOfWeek .rdrDayStartPreview{
    border-top-right-radius: 1.333em;
    border-bottom-right-radius: 1.333em;
    border-right-width: 1px;
-   right: 0px;
+   right: 0;
 
  }
 
@@ -273,11 +273,11 @@
   background: rgba(8, 164, 255, 0.555);
   position: absolute;
   top: 3px;
-  left: 0px;
-  right: 0px;
+  left: 0;
+  right: 0;
   bottom: 3px;
   pointer-events: none;
-  border: 0px solid currentColor;
+  border: 0 solid currentColor;
   z-index: 1;
   color: rgb(128, 71, 71);
 }
@@ -288,7 +288,7 @@
   border-bottom-width: 1px;
   border-top-left-radius: 1.333em;
   border-bottom-left-radius: 1.333em;
-  left: 0px;
+  left: 0;
 }
 
 .rdrDayInPreview{
@@ -303,7 +303,7 @@
   border-top-right-radius: 1.333em;
   border-bottom-right-radius: 1.333em;
   right: 2px;
-  right: 0px;
+  right: 0;
 
 }
 
@@ -371,8 +371,8 @@
   position: absolute;
   top: -2px;
   bottom: -2px;
-  left: 0px;
-  right: 0px;
+  left: 0;
+  right: 0;
   background: transparent;
 }
 
