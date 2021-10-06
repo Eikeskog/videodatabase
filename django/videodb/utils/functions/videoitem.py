@@ -17,8 +17,10 @@ from .common import (
 
 def get_nearby_videoitems(
     videoitem,
-    meters = [120, 280, 550, 1100]
+    meters = None
 ):
+    if meters is None:
+        meters = [120, 280, 550, 1100]
     if not is_list_or_tuple(meters):
         if is_numeric(meters):
             meters = [meters,]
