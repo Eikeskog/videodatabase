@@ -161,7 +161,7 @@ def get_geotag_suggestions_from_local_dir(directory):
                 'directory_path',
             ).distinct()
 
-    results = [x for x in qs]
+    results = list(qs)
     if results and isinstance(results, list):
         return results
     elif results and isinstance(results, dict):

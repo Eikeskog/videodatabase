@@ -91,7 +91,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
 
     @classmethod
     def sort_objs_on_min_max_address_fields_count(cls, objects_list: list) -> object:
-        copy = [obj for obj in objects_list]
+        copy = list(objects_list)
         copy.sort(key=lambda obj: len(obj.get_unique_address_fields_not_null().keys()))
         return copy
 
@@ -312,9 +312,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
                 ]):
                     geotag_displayname_alternatives['displayname_variants'].append(column_value)
 
-            geotag_displayname_alternatives['unique_fields_include_null'] = {
-                _key: _value for _key, _value in geotag.items()
-            }
+            geotag_displayname_alternatives['unique_fields_include_null'] = dict(geotag.items())
 
             _json = json.dumps(geotag_displayname_alternatives, sort_keys=True)
 
