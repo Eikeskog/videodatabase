@@ -126,18 +126,16 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         def check_field_difference(field_name):
             if field_name not in ['locality', 'postal_town'] and obj_min_address_fields[field_name] != obj_max_address_fields[field_name]:
                 return True
-            elif field_name == 'locality':
+            if field_name == 'locality':
                 if 'postal_town' in obj_max_address_fields:
                     if obj_min_address_fields['locality'] == obj_max_address_fields['postal_town']:
                         return False
-                    else: 
-                        return True
+                    return True
             elif field_name == 'postal_town':
                 if 'locality' in obj_max_address_fields:
                     if obj_min_address_fields['postal_town'] == obj_max_address_fields['locality']:
                         return False
-                    else:
-                        return True
+                    return True
 
         for field_name in obj_min_address_fields.keys():
             if field_name not in obj_max_address_fields:
@@ -212,8 +210,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
                     field = parent_field,
                     value = obj_fields_not_null[parent_field]
                 )
-            else:
-                self.get_first_parent_field_value(from_field = parent_field)
+            self.get_first_parent_field_value(from_field = parent_field)
         
         if isinstance(parent_field, list):
             for field in parent_field:

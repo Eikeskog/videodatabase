@@ -47,8 +47,7 @@ def gmaps_geocode_get_address_dict(address_components_json):
     component_type = get_component_type(component)
     if component_type in component_type_translations:
       return component_type_translations[component_type]
-    else: 
-      return component_type
+    return component_type
 
   def get_component_type(component_json):
     return str(
