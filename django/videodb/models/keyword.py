@@ -23,7 +23,7 @@ class Keyword(models.Model):
     # og dette
     @classmethod
     def validate_string(cls, string: str) -> str:
-        pattern = "^[4-9][a-cA-C\+-]?[\+-]?$|^[a-zA-ZæøåÆØÅ][a-zA-ZæøåÆØÅ]+$"
+        pattern = r"^[4-9][a-cA-C\+-]?[\+-]?$|^[a-zA-ZæøåÆØÅ][a-zA-ZæøåÆØÅ]+$"
         string = cls.clean_string(string)
         if not re.search(pattern, string):
             return None
