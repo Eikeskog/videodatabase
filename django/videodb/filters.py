@@ -26,7 +26,7 @@ class LocationFilter(django_filters.FilterSet):
         if len(ids) == 0:
             ids_names = UniqueLocationDisplayname.get_unique_displaynames_any_address_field_startswith(value)
             if ids_names:
-                second_ids = [key for key in ids_names.keys()]
+                second_ids = list(ids_names.keys())
                 ids = queryset.filter(id__in=second_ids)[:10]
 
         return ids
