@@ -54,7 +54,7 @@ def get_boundingboxes_incremental_steps(
         if is_numeric(steps_m):
             km = steps_m/1000
             return [get_bounding_box(lat, lng, km),]
-        else: return None
+        return None
 
     if not is_all_numeric(steps_m): return None
     

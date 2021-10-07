@@ -164,7 +164,7 @@ def get_geotag_suggestions_from_local_dir(directory):
     results = list(qs)
     if results and isinstance(results, list):
         return results
-    elif results and isinstance(results, dict):
+    if results and isinstance(results, dict):
         return [results,]
     return None
 
@@ -176,13 +176,11 @@ def get_geotag_suggestions_from_local_dirs_recursive(directories):
         geotag_suggestions = get_geotag_suggestions_from_local_dir(dir)
         if geotag_suggestions:
             return geotag_suggestions
-        else:
-            parent_dir = get_parent_dir(dir)
-            geotag_suggestions = get_geotag_suggestions_from_local_dir(parent_dir)
-            if geotag_suggestions:
-                return geotag_suggestions
-            else:
-                return get_geotag_suggestions_from_local_dirs_recursive(parent_dir)
+        parent_dir = get_parent_dir(dir)
+        geotag_suggestions = get_geotag_suggestions_from_local_dir(parent_dir)
+        if geotag_suggestions:
+            return geotag_suggestions
+        return get_geotag_suggestions_from_local_dirs_recursive(parent_dir)
 
 
 def get_directory_items(directory):
