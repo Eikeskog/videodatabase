@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import * as locales from 'react-date-range/dist/locale';
 import { DateRange } from 'react-date-range';
 import SingleChip from '../Chips/SingleChip';
-// import { useSearchfilters } from '../../../browser/contexts/SearchfiltersContext';
 import { useSearchfilters } from '../../../thumbnail-browser/contexts/SearchfiltersContext';
 import { dateRangeToString, dateRangeToSearchParameter } from '../../utils/utils';
 
@@ -17,10 +16,12 @@ const DateRangePicker = () => {
       key: 'selection',
     },
   ]);
+
   const { addSearchfilter } = useSearchfilters();
 
-  const chipLabel = dateRangeToString(state[0].startDate, state[0].endDate);
-  const searchParameter = dateRangeToSearchParameter(state[0].startDate, state[0].endDate);
+  const chipLabel = () => dateRangeToString(state[0].startDate, state[0].endDate);
+
+  const searchParameter = () => dateRangeToSearchParameter(state[0].startDate, state[0].endDate);
 
   return (
     <>

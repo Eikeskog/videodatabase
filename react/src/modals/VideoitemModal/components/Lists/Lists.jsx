@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useVideoitemContext } from '../../context/context';
+import { useUserContext } from '../../../../common/contexts/UserContext/UserContext';
 import urls from '../../../../dev_urls';
 
+// not implemented
 const Lists = () => {
-  const { videoitemId, userLists } = useVideoitemContext();
-
-  console.log('lists', userLists);
+  const { videoitemId/* , userLists */ } = useVideoitemContext();
+  const {
+    useAuth: {
+      user: { id: userId },
+    },
+    useAuthorizedFetch: {
+      authorizedFetch,
+    },
+  } = useUserContext();
 
   const [state, setState] = useState({
     userId: '',
     listId: '',
+    newListLabel: '',
   });
 
   const handleChange = (evt) => {
@@ -21,6 +29,14 @@ const Lists = () => {
     }));
   };
 
+  const handleResponse = (data) => {
+    console.log(data);
+  };
+
+  const handleError = (error) => {
+    console.log(error);
+  };
+
   const addToList = async () => {
     const request = {
       list_id: state.listId,
@@ -28,11 +44,46 @@ const Lists = () => {
       videoitems: [videoitemId],
     };
 
-    const url = `${urls.API_BASE}${state.userId}/lists/${state.listId}/add/`;
+    const url = `${urls.API_BASE}${userId}/lists/${state.listId}/add/`;
 
-    const { data } = await axios.post(url, request);
+    authorizedFetch({
+      method: 'post',
+      url,
+      handleResponse,
+      handleError,
+      body: request,
+    });
+  };
 
-    console.log('data', data);
+  const newList = async () => {
+    const url = `${urls.API_BASE}${userId}/lists/new/${state.newListLabel}/`;
+
+    const request = {
+      list_label: state.newListLabel,
+      user_id: userId,
+      videoitems: [videoitemId],
+    };
+
+    authorizedFetch({
+      method: 'post',
+      url,
+      handleResponse,
+      handleError,
+      body: request,
+    });
+  };
+
+  const testAllUserLists = async () => {
+    const url = `${urls.API_BASE}${userId}/lists/`;
+
+    authorizedFetch({
+      method: 'get',
+      url,
+      handleResponse,
+      handleError,
+      // body: request,
+    });
+    // api/<int:user_id>/lists/
   };
 
   return (
@@ -61,6 +112,21 @@ const Lists = () => {
       <button type="button" onClick={addToList}>
         Legg til i liste
       </button>
+      <form>
+        <label htmlFor="newListLabel">
+          newListLabel
+          <input
+            type="text"
+            name="newListLabel"
+            value={state.newListLabel}
+            onChange={handleChange}
+          />
+        </label>
+      </form>
+      <button type="button" onClick={newList}>
+        Lag ny liste
+      </button>
+      <p role="presentation" onClick={testAllUserLists}>test all userlists</p>
     </>
   );
 };

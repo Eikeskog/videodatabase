@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Grid from '@material-ui/core/Grid';
 import Overlay from './components/Overlay/Overlay';
@@ -9,7 +9,7 @@ import { getThumbnailUrl } from '../../../common/utils/utils';
 
 import styles from './Card.module.css';
 
-const cardSizes = {
+const defaultCardSizes = {
   xs: 12,
   sm: 6,
   md: 4,
@@ -36,25 +36,18 @@ const Card = ({
   const [displayOverlay, setDisplayOverlay] = useState(false);
   const [displaySlider, setDisplaySlider] = useState(false);
 
-  const handleSliderChange = (event) => setThumbnailUrl(
+  const handleSliderChange = useCallback((event) => setThumbnailUrl(
     getThumbnailUrl(videoitemId, parseInt(event.target.value, 10)),
-  );
-
-  const openModal = (elementClicked) => toggleModal({
-    openedFromComponent: 'thumbnailboxOuter',
-    activeModalElement: elementClicked,
-    innerElementId: videoitemId,
-    optionalParams: null,
-  });
+  ), []);
 
   return (
     <Grid
       item
       key={videoitemId}
-      xs={cardSizes.xs}
-      sm={cardSizes.sm}
-      md={cardSizes.md}
-      lg={cardSizes.lg}
+      xs={defaultCardSizes.xs}
+      sm={defaultCardSizes.sm}
+      md={defaultCardSizes.md}
+      lg={defaultCardSizes.lg}
     >
       <div
         className={`${styles.card}`}
@@ -64,7 +57,12 @@ const Card = ({
         <Header
           date={date}
           locationDisplayname={locationDisplayname}
-          openModal={openModal}
+          openModal={(elementClicked) => toggleModal({
+            openedFromComponent: 'thumbnailboxOuter',
+            activeModalElement: elementClicked,
+            innerElementId: videoitemId,
+            optionalParams: null,
+          })}
         />
 
         <div

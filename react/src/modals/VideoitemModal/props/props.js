@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-export const propTypes = {
+export const videoitemProps = {
   videoitemId: PropTypes.string,
   locationDisplayname: PropTypes.string,
   mapCenter: PropTypes.shape({
@@ -66,7 +66,7 @@ export const propTypes = {
   ),
 };
 
-export const defaultProps = {
+export const videoitemDefaultProps = {
   locationDisplayname: null,
   mapCenter: null,
   videoitemId: null,

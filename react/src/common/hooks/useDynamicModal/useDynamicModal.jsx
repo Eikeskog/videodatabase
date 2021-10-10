@@ -1,21 +1,26 @@
-import React, { useRef, useState } from 'react';
+import React, {
+  useRef, useState, useCallback, useMemo,
+} from 'react';
 import Modal from '../../components/Modal/Modal';
 import initModal from './initModal';
 import { useUserContext } from '../../contexts/UserContext/UserContext';
 
 const useDynamicModal = () => {
-  const { useAuthorizedFetch } = useUserContext();
-  const { authorizedFetch } = useAuthorizedFetch;
-
   const innerComponent = useRef();
   const [display, setDisplay] = useState(false);
 
-  const setInnerComponent = (Component) => {
-    innerComponent.current = Component;
-    setDisplay(() => true);
-  };
+  const {
+    useAuth: { isLoggedIn },
+    useAuthorizedFetch: { authorizedFetch },
+  } = useUserContext();
 
-  const getInnerComponent = ({
+  const setInnerComponent = useCallback((Component) => {
+    innerComponent.current = Component;
+    if (!Component) return;
+    setDisplay(() => true);
+  }, []);
+
+  const getInnerComponent = useCallback(({
     openedFromComponent,
     activeModalElement,
     innerElementId,
@@ -36,9 +41,12 @@ const useDynamicModal = () => {
       handleResponse: (data) => { setInnerComponent(handleResponse(data)); },
       handleError: () => { setInnerComponent(<p>error..</p>); },
     });
-  };
+  }, [isLoggedIn]);
 
-  const closeModal = () => setDisplay(() => false);
+  const closeModal = useCallback(() => {
+    setDisplay(() => false);
+    setInnerComponent(null);
+  }, []);
 
   return {
     modalContent: display ? (
@@ -48,8 +56,8 @@ const useDynamicModal = () => {
         closeModal={closeModal}
       />
     ) : null,
-    getModal: getInnerComponent,
-    closeModal,
+    getModal: useMemo(() => getInnerComponent, [isLoggedIn]),
+    closeModal: useMemo(() => closeModal, [display]),
   };
 };
 

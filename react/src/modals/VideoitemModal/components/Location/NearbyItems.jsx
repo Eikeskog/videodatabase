@@ -1,10 +1,9 @@
 import React from 'react';
 import { useVideoitemContext } from '../../context/context';
 
-// simple json demo
+// simple demo
 const NearbyItems = () => {
-  const { useLocationState } = useVideoitemContext();
-  const { nearbyItems } = useLocationState;
+  const { useLocationState: { nearbyItems } } = useVideoitemContext();
 
   return (
     <div>

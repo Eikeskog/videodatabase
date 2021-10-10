@@ -1,0 +1,28 @@
+.header {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  border-radius: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  height: 30px;
+  font-weight: 600;
+  width: auto;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.header:hover {
+  background: var(--tertiary);
+  color: var(--primary);
+  font-size: 14px;
+  transition: color 0.1s ease-in; 
+}
+
+.header.active {
+  background: var(--tertiary);
+  /* border-radius: 6px 6px 0px 0px; */
+  transition: background 0.1s ease-in; 
+}

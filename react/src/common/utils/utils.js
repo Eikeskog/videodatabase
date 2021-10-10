@@ -1,4 +1,4 @@
-import { directories } from '../constants/constants';
+import { DIRECTORIES, NORWEGIAN_MONTH_NAMES } from '../constants/constants';
 
 export const capitalizeFirstChar = (str) => {
   if (!str || typeof str !== 'string') return null;
@@ -44,7 +44,7 @@ export const secondsToHms = (seconds) => {
 export const getThumbnailUrl = (videoitemId, thumbnailIndex) => {
   if (!videoitemId || !thumbnailIndex) return null;
   const format = thumbnailIndex.toString().padStart(2, '0');
-  return `${directories.static_thumbnails}/${videoitemId}/${format}.jpg`;
+  return `${DIRECTORIES.static_thumbnails}/${videoitemId}/${format}.jpg`;
 };
 
 export const arrFirstItem = (array) => {
@@ -71,21 +71,6 @@ export const prependedKeysDictFromSingleEntryJsonList = (
 );
 
 export const localeDateStringNorwegianBugFix = (date, longOrShort = 'short', allNumerical) => {
-  const monthNames = [
-    { short: 'jan.', long: 'januar' },
-    { short: 'feb.', long: 'februar' },
-    { short: 'mars', long: 'mars' },
-    { short: 'april', long: 'april' },
-    { short: 'mai', long: 'mai' },
-    { short: 'juni', long: 'juni' },
-    { short: 'juli', long: 'juli' },
-    { short: 'aug.', long: 'august' },
-    { short: 'sep.', long: 'september' },
-    { short: 'okt.', long: 'oktober' },
-    { short: 'nov.', long: 'november' },
-    { short: 'des.', long: 'desember' },
-  ];
-
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const month = (dateObj.getMonth() + 1).toString();
   const daynumber = dateObj.getDate().toString();
@@ -97,7 +82,7 @@ export const localeDateStringNorwegianBugFix = (date, longOrShort = 'short', all
     }
     return `${daynumber}/${month}-${year.substring(2)}`;
   }
-  return `${daynumber}. ${monthNames[month][longOrShort]} ${year}`;
+  return `${daynumber}. ${NORWEGIAN_MONTH_NAMES[month][longOrShort]} ${year}`;
 };
 
 export const dateRangeToSearchParameter = (startDate, endDate) => {

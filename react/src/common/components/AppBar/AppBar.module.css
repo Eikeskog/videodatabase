@@ -12,7 +12,6 @@
 .topOuterWrapper {
   flex-direction: column;
   width: 100%;
-  /* background-color: rgba(180,180,180,1); */
   background-color: teal;
   align-content: center;
   align-items: center;
@@ -49,14 +48,11 @@
 
 .middleOuterWrapper {
   width: 100%;
-  /* background-color: var(--inactive); */
-
   background-color: rgba(255,255,255,0.1);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   align-items: center;
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); */
 }
 
 .logoWrapper {

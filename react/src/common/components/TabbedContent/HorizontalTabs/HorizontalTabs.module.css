@@ -6,23 +6,26 @@
 	position: relative;
 	margin: 0;/*px 6px 0px 6px;*/
 	z-index: 500;
+	background-color: yellow;
+	padding: 0;
 }
 
 .tabs > input,
 .tabs > span {
-	height: 40px;
-	line-height: 40px;
+	height: 30px;
+	line-height: 30px;
 	position: absolute;
 	top: 0;
 }
 
+/* 
 .tabs > input {
 	cursor: pointer;
 	filter: alpha(opacity=0);
 	opacity: 0;
 	position: absolute;
 	z-index: 99;
-}
+} */
 
 .tabs > span {
 	text-align: center;
@@ -37,10 +40,11 @@
   transition: all .5s;
 }
 
+/* 
 .tabs > input:checked + span,
 .tabs > input:hover + span {
 	color: var(--secondary);
-}
+} */
 
 .content {
 	/* padding: 80px 10px 0px; */
@@ -51,9 +55,11 @@
 	max-height: 400px;
 	overflow: auto;
 	position: relative;
+	padding: 0;
 	/* background: purple; */
 }
 
 .line {
-	background: var(--accent);
+	/* background: var(--accent); */
+	background: var(--active);
 }

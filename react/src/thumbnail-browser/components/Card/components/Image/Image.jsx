@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { directories } from '../../../../../common/constants/constants';
+import { DIRECTORIES } from '../../../../../common/constants/constants';
 import styles from './Image.module.css';
 
 export const Image = ({ url }) => (
@@ -13,7 +13,7 @@ export const Image = ({ url }) => (
 
 export const Placeholder = () => (
   <img
-    src={`${directories.static_thumbnails}/placeholder.jpg`}
+    src={`${DIRECTORIES.static_thumbnails}/placeholder.jpg`}
     className={`${styles.placeholder}`}
     alt="placeholder"
   />

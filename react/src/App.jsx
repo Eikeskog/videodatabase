@@ -12,43 +12,24 @@ import styles from './App.module.css';
 const App = () => {
   const palette = usePalette();
   const { modalContent, getModal } = useDynamicModal();
-  const { useAuth: { isLoggedIn } } = useUserContext();
+  const { useAuth: { isLoggedIn, logIn } } = useUserContext();
 
-  const toggleModal = ({
-    openedFromComponent,
-    activeModalElement,
-    innerElementId,
-    optionalParams,
-  }) => {
-    getModal({
-      openedFromComponent,
-      activeModalElement,
-      innerElementId,
-      optionalParams,
-    });
-  };
+  if (!isLoggedIn) {
+    return <LoginForm logIn={logIn} />;
+  }
 
   return (
-    <>
-      {!isLoggedIn
-        ? <LoginForm />
-        : (
-          <SearchfiltersContext>
+    <SearchfiltersContext>
+      <div className={`${palette} ${styles.app}`}>
+        <AppBar />
 
-            <div className={`${palette} ${styles.app}`}>
-              <AppBar />
+        { modalContent
+          && modalContent }
 
-              { modalContent && modalContent }
-
-              <ThumbnailBrowser toggleModal={toggleModal} />
-            </div>
-
-          </SearchfiltersContext>
-        )}
-    </>
+        <ThumbnailBrowser toggleModal={getModal} />
+      </div>
+    </SearchfiltersContext>
   );
 };
 
-const MemoizedApp = React.memo(App);
-
-export default MemoizedApp;
+export default App;

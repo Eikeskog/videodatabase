@@ -20,8 +20,6 @@
 
 .header svg, .footer svg {
   font-size: 1.4em;
-  /* margin-right: 8px;
-  margin-left: 8px; */
   vertical-align: bottom;
   opacity: 1;
 }

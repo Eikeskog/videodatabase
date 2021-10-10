@@ -1,9 +1,10 @@
 from django.db import models
 
+
 class Project(models.Model):
     class Meta:
-        db_table = 'project'
-        ordering = ['name']
+        db_table = "project"
+        ordering = ["name"]
 
     project_id = models.CharField(max_length=16, primary_key=True)
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import GoogleMapReact from 'google-map-react';
 import Marker from './Marker';
@@ -11,19 +11,21 @@ const ControlledMapCanvas = ({
   onMapChange,
   onMarkerChange,
 }) => {
-  const onChange = ({ center, zoom }) => {
+  const onChange = useCallback(({ center, zoom }) => {
     onMapChange({ center, zoom, draggable: mapState.draggable });
-  };
+  }, [mapState, markersState]);
 
-  const onMarkerInteraction = (childKey, _/* childProps */, mouse) => {
-    if (!markersState?.[childKey]?.draggable) return;
+  const onMarkerInteraction = useCallback(
+    (childKey, _/* childProps */, mouse) => {
+      if (!markersState?.[childKey]?.draggable) return;
 
-    onMarkerChange({
-      id: childKey,
-      lat: mouse.lat,
-      lng: mouse.lng,
-    });
-  };
+      onMarkerChange({
+        id: childKey,
+        lat: mouse.lat,
+        lng: mouse.lng,
+      });
+    }, [markersState],
+  );
 
   const onMarkerInteractionStart = (childKey, _, mouse) => {
     if (!markersState?.[childKey]?.draggable) return;
@@ -49,6 +51,18 @@ const ControlledMapCanvas = ({
     });
   };
 
+  const markers = useMemo(
+    () => !!Object.keys(markersState).length
+      && Object.keys(markersState).map((markerId) => (
+        <Marker
+          key={markerId}
+          lat={markersState[markerId]?.lat}
+          lng={markersState[markerId]?.lng}
+          draggable={markersState[markerId]?.draggable}
+        />
+      )), [markersState],
+  );
+
   return (
     <GoogleMapReact
       options={{
@@ -56,7 +70,6 @@ const ControlledMapCanvas = ({
         mapTypeId: 'satellite',
         styles: dark,
       }}
-      mapTypeId="terrain"
       draggable={mapState.draggable}
       bootstrapURLKeys={{ key: GMAPS_TOKEN }}
       onChange={onChange}
@@ -69,19 +82,7 @@ const ControlledMapCanvas = ({
       onZoomAnimationStart={onChange}
       yesIWantToUseGoogleMapApiInternals
     >
-
-      { !!Object.keys(markersState).length && Object.keys(markersState).map((key) => (
-        <Marker
-          key={key}
-          lat={markersState[key]?.lat}
-          lng={markersState[key]?.lng}
-          draggable={markersState[key]?.draggable}
-          // events={markersState[key]?.events}
-          // color={markersState[key]?.color}
-          // size=markersState[key]?.size}
-        />
-      )) }
-
+      {markers}
     </GoogleMapReact>
   );
 };
@@ -118,4 +119,6 @@ ControlledMapCanvas.defaultProps = {
   markersState: null,
 };
 
-export default ControlledMapCanvas;
+const MemoizedControlledMapCanvas = React.memo(ControlledMapCanvas);
+
+export default MemoizedControlledMapCanvas;

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useSearchfilters } from '../../../contexts/SearchfiltersContext';
 import useTypingHints from '../../../../common/hooks/useTypingHints';
-import { renderCheckboxList, renderTypingHints } from './util';
+import { renderCheckboxList, renderTypingHints } from './utils';
 
 import styles from './SearchableCheckboxList.module.css';
 
@@ -55,4 +55,6 @@ SearchableCheckboxes.defaultProps = {
   initialValues: {},
 };
 
-export default SearchableCheckboxes;
+const MemoizedSearchableCheckboxes = React.memo(SearchableCheckboxes);
+
+export default MemoizedSearchableCheckboxes;

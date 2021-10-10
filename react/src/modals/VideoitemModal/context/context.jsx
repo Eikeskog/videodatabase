@@ -1,25 +1,15 @@
 import React, {
   createContext,
   useContext,
-  // useState,
-  // useMemo,
 } from 'react';
-// import { throttle } from 'lodash';
-// import { useLocationContext } from './locationContext';
 
-import { defaultProps, propTypes } from '../props/props';
+import { videoitemProps, videoitemDefaultProps } from '../props/props';
 import useLocationState from '../hooks/useLocationState';
 
 const Context = createContext({
-  location: {},
-  mapState: {},
-  markersState: {},
-  draggableMarker: false,
-  locationDisplayname: () => {},
-  setLocationDisplayname: () => {},
-  onMapChange: () => {},
-  onMarkerChange: () => {},
-  toggleDraggableMarker: () => {},
+  useLocationState: () => {},
+  userLists: {},
+  videoitemId: null,
 });
 
 export const useVideoitemContext = () => useContext(Context);
@@ -55,8 +45,8 @@ const VideoitemContext = ({
   );
 };
 
-VideoitemContext.propTypes = propTypes;
+VideoitemContext.propTypes = videoitemProps;
 
-VideoitemContext.defaultProps = defaultProps;
+VideoitemContext.defaultProps = videoitemDefaultProps;
 
 export default VideoitemContext;

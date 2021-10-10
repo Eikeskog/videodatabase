@@ -4,13 +4,13 @@ import './Login.css';
 import useMultipleRefs from '../../../hooks/useMultipleRefs';
 import { useUserContext } from '../../../contexts/UserContext/UserContext';
 
-const LoginForm = () => {
+const LoginForm = (/* { logIn } */) => {
   const { refs, onChange } = useMultipleRefs(['email', 'password']);
-  const { useAuth } = useUserContext();
+  const { useAuth: { logIn } } = useUserContext();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    useAuth.logIn({ email: refs.email, password: refs.password });
+    logIn({ email: refs.email, password: refs.password });
   };
 
   return (
@@ -65,7 +65,3 @@ const LoginForm = () => {
 };
 
 export default LoginForm;
-
-// LoginForm.propTypes = {
-//   handleLogin: PropTypes.func.isRequired,
-// };

@@ -3,9 +3,8 @@ import { localeDateStringNorwegianBugFix } from '../../../common/utils/utils';
 import Card from '../Card/Card';
 
 const renderCards = (data, toggleModal) => {
-  if (!data) return <p>test</p>;
-
-  return data?.map((item) => (
+  if (!data) return <></>;
+  return data.map((item) => (
     <Card
       key={item.videoitem_id}
       toggleModal={toggleModal}
@@ -42,5 +41,4 @@ const renderCards = (data, toggleModal) => {
     />
   ));
 };
-
 export default renderCards;

@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import {
+  useEffect, useState, useCallback,
+} from 'react';
 import initialState from './initialState';
 import {
   getInitalState,
@@ -15,21 +17,19 @@ import urls from '../../../dev_urls';
 const useAuth = () => {
   const [state, setState] = useState(() => getInitalState());
 
-  const logIn = async ({ email, password }) => {
-    if (state?.isLoggedIn) return;
-
+  const logIn = useCallback(async ({ email, password }) => {
     axios.post(urls.LOGIN, { email, password })
       .then((response) => {
         const stateObj = responseDataToStateObj(response?.data);
-        setState(() => stateObj);
+        setState(stateObj);
         localStorageSave(stateObj);
       })
       .catch((error) => {
         setState(() => ({ ...initialState, error: error.response }));
       });
-  };
+  }, []);
 
-  const refresh = async (onRefresh) => {
+  const refresh = useCallback(async (onRefresh) => {
     if (!state?.token?.refresh) {
       setState(() => ({
         ...initialState,
@@ -71,17 +71,17 @@ const useAuth = () => {
       }));
       if (onRefresh) onRefresh(error);
     }
-  };
+  }, [state.token.refresh]);
 
-  const logOut = () => {
+  const logOut = useCallback(() => {
     localStorageClear();
     setState(() => initialState);
-  };
+  }, []);
 
   useEffect(() => {
     if (state?.status === 'OK') return;
     if (state?.status === 'EXPIRED' || state?.status === 'EXPIRING') refresh();
-  }, [state]);
+  }, [state.status]);
 
   return {
     headers: state?.token?.access?.length ? {

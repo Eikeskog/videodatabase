@@ -17,7 +17,6 @@ const Overlay = ({ display }) => (
     <div className={`${styles.container}`}>
       <FontAwesomeIcon icon="fa-regular fa-heart" />
       <FontAwesomeIcon icon="fa-solid fa-circle-info" />
-      {/* <FontAwesomeIcon icon="fa-solid fa-heart" /> */}
     </div>
   </motion.div>
 );

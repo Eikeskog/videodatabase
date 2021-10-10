@@ -11,7 +11,7 @@ const Overlay = styled(motion.div)`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 5000;
 `;
 
@@ -27,16 +27,18 @@ const ModalContainer = styled(motion.div)`
   transform: translate(-50%, -50%);
   border-radius: 12px;
   z-index: 6000;
+  padding-top: 32px;
+  background: #303030;
 `;
-//  box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+
 const CloseButton = styled.svg`
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   float: right;
   display: block;
   position: relative;
   margin-right: 12px;
-  margin-top: 12px;
+  margin-top: -24px;
   cursor: pointer;
   z-index: 99999;
   &:hover {
@@ -68,39 +70,41 @@ const Modal = ({
           exit="exit"
           variants={variants}
         >
-          <ModalContainer ref={ref} className={`${styles.container}`}>
-            <div style={{ width: '100%', zIndex: '9999' }}>
-              <CloseButton
-                onClick={closeModal}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20.39 20.39"
-              >
-                <title>close</title>
-                <line
-                  x1="19.39"
-                  y1="19.39"
-                  x2="1"
-                  y2="1"
-                  fill="none"
-                  stroke="#5c3aff"
-                  strokeLinecap="round"
-                  strokeMiterlimit="10"
-                  strokeWidth="2"
-                />
-                <line
-                  x1="1"
-                  y1="19.39"
-                  x2="19.39"
-                  y2="1"
-                  fill="none"
-                  stroke="#5c3aff"
-                  strokeLinecap="round"
-                  strokeMiterlimit="10"
-                  strokeWidth="2"
-                />
-              </CloseButton>
-            </div>
-            <div style={{ position: 'relative', padding: '20px' }}>
+          <ModalContainer
+            ref={ref}
+            className={`${styles.container}`}
+          >
+
+            <CloseButton
+              onClick={closeModal}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20.39 20.39"
+            >
+              <title>close</title>
+              <line
+                x1="19.39"
+                y1="19.39"
+                x2="1"
+                y2="1"
+                fill="none"
+                stroke="#5c3aff"
+                strokeLinecap="round"
+                strokeMiterlimit="10"
+                strokeWidth="2"
+              />
+              <line
+                x1="1"
+                y1="19.39"
+                x2="19.39"
+                y2="1"
+                fill="none"
+                stroke="#5c3aff"
+                strokeLinecap="round"
+                strokeMiterlimit="10"
+                strokeWidth="2"
+              />
+            </CloseButton>
+            <div style={{ padding: '15px', height: '500px', backgroundColor: 'gray' }}>
               {InnerComponent}
             </div>
           </ModalContainer>
