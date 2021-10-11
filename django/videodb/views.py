@@ -16,7 +16,6 @@ from .serializers import (
     VideoitemEntrySerializer,
 )
 
-
 DEFAULT_ERRORS = {"auth": {"error": "Not authenticated"}}
 
 

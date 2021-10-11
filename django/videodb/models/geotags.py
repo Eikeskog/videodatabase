@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.module_loading import import_string
 from django.forms.models import model_to_dict
 from time import sleep
 from timeit import default_timer as timer
@@ -6,22 +7,45 @@ import geopy.distance
 from ..utils.functions.geographical import get_bounding_box
 from ..utils.functions.geocoding import get_reverse_geotags_gmaps
 
-# in early development
+SORTED_ADDRESS_FIELDS = [
+    "locality",
+    "postal_town",
+    "postal_code",
+    "municipality",
+    "county",
+    "country_code",
+]
 
 
 class ScheduledReverseGeotag(models.Model):
-    class Meta:
-        db_table = "scheduled_reverse_geotag"
-
     gps_point = models.ForeignKey(
-        to="GmapsGpsPoint", on_delete=models.CASCADE, null=True, blank=True
+        to="GmapsGpsPoint",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="scheduled_reverse_geotag",
     )
     geotag_level_1 = models.ForeignKey(
-        to="GeotagLevel1", on_delete=models.CASCADE, null=True, blank=True
+        to="GeotagLevel1",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="scheduled_reverse_geotag",
+    )
+
+    geotag_lvl_1 = models.ForeignKey(
+        to="GeotagLvl1",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="scheduled_reverse_geotag",
     )
 
     lat = models.DecimalField(max_digits=11, decimal_places=7, null=True, blank=True)
     lng = models.DecimalField(max_digits=11, decimal_places=7, null=True, blank=True)
+
+    class Meta:
+        db_table = "scheduled_reverse_geotag"
 
     @classmethod
     def gps_point_is_scheduled(cls, gps_point: object) -> bool:
@@ -41,6 +65,7 @@ class ScheduledReverseGeotag(models.Model):
     @classmethod
     def clear_complete(cls) -> None:
         cls.objects.filter(geotag_level_1_id__isnull=False).delete()
+        cls.objects.filter(geotag_lvl_1_id__isnull=False).delete()
         return
 
     @classmethod
@@ -52,6 +77,7 @@ class ScheduledReverseGeotag(models.Model):
             return sleep((max_throttle - time_end - time_start))
 
         new_geotags = []
+        new_geotags2 = []
 
         qs = cls.objects.all()
         qs_len = len(qs)
@@ -81,16 +107,21 @@ class ScheduledReverseGeotag(models.Model):
                 if not geotag_dict:
                     continue
                 geotag = GeotagLevel1.new_from_dict(geotag_dict)
+                geotag2 = GeotagLvl1.new_from_dict(geotag_dict)
                 if geotag:
                     new_geotags.append(geotag)
+                    new_geotags2.append(geotag2)
                 else:
                     continue
 
             scheduled.geotag_level_1 = geotag
+            scheduled.geotag_lvl_1 = geotag2
             scheduled.save()
 
             gps_point = scheduled.gps_point
             gps_point.geotag_level_1 = geotag
+            gps_point.geotag_lvl_1 = geotag2
+
             gps_point.save()
 
             time_end = timer()
@@ -99,10 +130,7 @@ class ScheduledReverseGeotag(models.Model):
         cls.clear_complete()
 
 
-class GeotagLevel5(models.Model):
-    class Meta:
-        db_table = "geotag_level_5"
-
+class Geotag(models.Model):
     lat_min = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
@@ -116,22 +144,248 @@ class GeotagLevel5(models.Model):
         max_digits=11, decimal_places=7, null=True, blank=True
     )
 
-    displayname_short = models.CharField(max_length=255, null=True, blank=True)
-    displayname_full = models.CharField(max_length=255, null=True, blank=True)
+    distances = models.JSONField(null=True, blank=True)
+    areal = models.FloatField(null=True, blank=True)
 
-    postal_town = models.CharField(max_length=120, null=True, blank=True)
-    locality = models.CharField(max_length=120, null=True, blank=True)
-    county = models.CharField(max_length=120, null=True, blank=True)
-    municipality = models.CharField(max_length=120, null=True, blank=True)
-    country_code = models.CharField(max_length=2, null=True, blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    postal_code = models.IntegerField(null=True, blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
+
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
+
+    def contains_point(self, point):
+        (lat, lng) = point
+        return all(
+            [(self.lat_min < lat < self.lat_max), (self.lng_min < lng < self.lng_max)]
+        )
+
+    @classmethod
+    def get_smallest_containing(cls, point):
+        (lat, lng) = point
+        qs = GeotagLvl1.objects.filter(
+            lat_min__lt=lat,
+            lat_max__gt=lat,
+            lng_min__lt=lng,
+            lng_max__gt=lng,
+        ).order_by('areal')[0]
+        return qs
+
+    @classmethod
+    def _geocode_dict_bbox(geocode_dict):
+        return {
+            "lat_min": geocode_dict["lat_min"],
+            "lat_max": geocode_dict["lat_max"],
+            "lng_min": geocode_dict["lng_min"],
+            "lng_max": geocode_dict["lng_max"],
+        }
+
+    def _update_from_dict(self, dictionary, exclude_keys):
+        for key, value in dictionary.items():
+            if exclude_keys and key in exclude_keys:
+                continue
+            if hasattr(self, key):
+                setattr(self, key, value)
+        self.save()
+
+    def bbox_areal(self) -> float:
+        if not self.areal:
+            self.areal = self.distances["ns"] * self.distances["ew"]
+            self.save()
+        return self.areal
+
+    def get_videoitems(self, limit: int):
+        if self.level != 1:
+            return
+        return [x.get_videoitems(limit) for x in self.gps_points.all()[:limit]]
+
+    def get_displayname_short(self) -> str:
+        fields = self.displayname_short.split(",")
+        model_dict = model_to_dict(self, fields=fields)
+
+        displayname = ", ".join(
+            model_dict[x] for x in fields if all([x is not None, model_dict[x]])
+        ).replace("fylke", "")
+
+        return displayname.strip()
+
+    @classmethod
+    def new_from_geocode_dict(cls, gmaps_geocode_dict, levels=5):
+        if not isinstance(levels, int) or 1 > levels > 5:
+            raise AssertionError("levels must be a number from 1 to 5.")
+        if not isinstance(gmaps_geocode_dict, dict):
+            raise AssertionError("gmaps_reverse_geocoding_dict must be a dictionary")
+
+        prev_geotag = None
+        for lvl in range(1, levels):
+            key = f"level_{lvl}"
+            if key not in gmaps_geocode_dict:
+                continue
+            cur_dict = gmaps_geocode_dict[key]
+            cur_bbox = cls._geocode_dict_bbox(cur_dict)
+            cur_class = cls.__get_class(lvl)
+
+            (obj, created) = cur_class.objects.get_or_create(**cur_bbox)
+
+            if created:
+                obj._update_from_dict(cur_dict, exclude_keys=list(cur_bbox.keys()))
+
+            if prev_geotag is None:
+                prev_geotag = obj
+                continue
+
+            if prev_geotag.parent is None:
+                prev_geotag.parent = obj
+
+            prev_geotag.save()
+            prev_geotag = obj
+
+    @classmethod
+    def __get_class(cls, lvl=0):
+        if 0 > lvl > 5:
+            raise AssertionError(f"geotag level {lvl} doesn't exist")
+        _cls = import_string(f"videodb.models.geotags.GeotagLvl{lvl}")
+        return _cls
+
+    def get_parent_class(self):
+        if self.level == 5:
+            return None
+        return Geotag.__get_class(self.level + 1)
+
+    def get_child_class(self):
+        if self.level == 0:
+            return None
+        return Geotag.__get_class(self.level - 1)
+
+    def get_address_dict(self):
+        address_dict = {
+            k: v
+            for k, v in model_to_dict(self).items()
+            if v and k in SORTED_ADDRESS_FIELDS
+        }
+        return address_dict
+
+
+class GeotagLvl1(Geotag):
+    level = 1
+    parent = models.ManyToManyField(to="GeotagLvl2", related_name="children")
+
+    class Meta:
+        db_table = "geotag_lvl_1"
+
+    unique_displayname_object = models.ForeignKey(
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_lvl_1_set",
+    )
+
+    def say(self, arg):
+        return Geotag.say(self, arg)
+
+
+class GeotagLvl2(Geotag):
+    level = 2
+    parent = models.ManyToManyField(to="GeotagLvl3", related_name="children")
+    unique_displayname_object = models.ForeignKey(
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_lvl_2_set",
+    )
+
+    class Meta:
+        db_table = "geotag_lvl_2"
+
+
+class GeotagLvl3(Geotag):
+    level = 3
+    parent = models.ManyToManyField(to="GeotagLvl4", related_name="children")
+    unique_displayname_object = models.ForeignKey(
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_lvl_3_set",
+    )
+
+    class Meta:
+        db_table = "geotag_lvl_3"
+
+
+class GeotagLvl4(Geotag):
+    level = 4
+    parent = models.ManyToManyField(to="GeotagLvl5", related_name="chldren")
+    unique_displayname_object = models.ForeignKey(
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_lvl_4_set",
+    )
+
+    class Meta:
+        db_table = "geotag_lvl_4"
+
+
+class GeotagLvl5(Geotag):
+    level = 5
+    parent = None
+
+    unique_displayname_object = models.ForeignKey(
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_lvl_5_set",
+    )
+
+    class Meta:
+        db_table = "geotag_lvl_5"
+
+
+class GeotagLevel5(models.Model):
+    lat_min = models.DecimalField(
+        max_digits=11, decimal_places=7, null=True, blank=True
+    )
+    lat_max = models.DecimalField(
+        max_digits=11, decimal_places=7, null=True, blank=True
+    )
+    lng_min = models.DecimalField(
+        max_digits=11, decimal_places=7, null=True, blank=True
+    )
+    lng_max = models.DecimalField(
+        max_digits=11, decimal_places=7, null=True, blank=True
+    )
+
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
+
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
 
     distances = models.JSONField(null=True, blank=True)
     test = models.JSONField(null=True, blank=True)
 
     unique_displayname_object = models.ForeignKey(
-        to="UniqueLocationDisplayname", on_delete=models.SET_NULL, null=True, blank=True
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_level_5_set",
     )
+
+    class Meta:
+        db_table = "geotag_level_5"
 
     def get_boundingbox_areal(self) -> float:
         return self.distances["ns"] * self.distances["ew"]
@@ -204,7 +458,7 @@ class GeotagLevel5(models.Model):
             lng_max__gt=bbox_dict["lng_max"],
         )
 
-        if not qs:
+        if not qs.exists():
             return None
 
         obj = sorted(qs, key=lambda x: (x.get_boundingbox_areal()))[0]
@@ -213,9 +467,6 @@ class GeotagLevel5(models.Model):
 
 
 class GeotagLevel4(models.Model):
-    class Meta:
-        db_table = "geotag_level_4"
-
     lat_min = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
@@ -229,25 +480,32 @@ class GeotagLevel4(models.Model):
         max_digits=11, decimal_places=7, null=True, blank=True
     )
 
-    displayname_short = models.CharField(max_length=255, null=True, blank=True)
-    displayname_full = models.CharField(max_length=255, null=True, blank=True)
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
 
-    postal_town = models.CharField(max_length=120, null=True, blank=True)
-    locality = models.CharField(max_length=120, null=True, blank=True)
-    county = models.CharField(max_length=120, null=True, blank=True)
-    municipality = models.CharField(max_length=120, null=True, blank=True)
-    country_code = models.CharField(max_length=2, null=True, blank=True)
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
 
     distances = models.JSONField(null=True, blank=True)
 
     unique_displayname_object = models.ForeignKey(
-        to="UniqueLocationDisplayname", on_delete=models.SET_NULL, null=True, blank=True
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_level_4_set",
     )
 
     geotag_level_5 = models.ForeignKey(
         to="GeotagLevel5", null=True, blank=True, on_delete=models.CASCADE
     )
+
+    class Meta:
+        db_table = "geotag_level_4"
 
     def get_boundingbox_areal(self) -> float:
         return self.distances["ns"] * self.distances["ew"]
@@ -335,7 +593,7 @@ class GeotagLevel4(models.Model):
             lng_max__gt=bbox_dict["lng_max"],
         )
 
-        if not qs:
+        if not qs.exists():
             return None
 
         obj = sorted(qs, key=lambda x: (x.get_boundingbox_areal()))[0]
@@ -344,9 +602,6 @@ class GeotagLevel4(models.Model):
 
 
 class GeotagLevel3(models.Model):
-    class Meta:
-        db_table = "geotag_level_3"
-
     lat_min = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
@@ -360,25 +615,36 @@ class GeotagLevel3(models.Model):
         max_digits=11, decimal_places=7, null=True, blank=True
     )
 
-    displayname_short = models.CharField(max_length=255, null=True, blank=True)
-    displayname_full = models.CharField(max_length=255, null=True, blank=True)
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
 
-    postal_town = models.CharField(max_length=120, null=True, blank=True)
-    locality = models.CharField(max_length=120, null=True, blank=True)
-    county = models.CharField(max_length=120, null=True, blank=True)
-    municipality = models.CharField(max_length=120, null=True, blank=True)
-    country_code = models.CharField(max_length=2, null=True, blank=True)
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
 
     distances = models.JSONField(null=True, blank=True)
 
     unique_displayname_object = models.ForeignKey(
-        to="UniqueLocationDisplayname", on_delete=models.SET_NULL, null=True, blank=True
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_level_3_set",
     )
 
     geotag_level_4 = models.ForeignKey(
-        to="GeotagLevel4", null=True, blank=True, on_delete=models.CASCADE
+        to="GeotagLevel4",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="geotag_level_3_set",
     )
+
+    class Meta:
+        db_table = "geotag_level_3"
 
     def get_boundingbox_areal(self) -> float:
         return self.distances["ns"] * self.distances["ew"]
@@ -467,7 +733,7 @@ class GeotagLevel3(models.Model):
             lng_max__gt=bbox_dict["lng_max"],
         )
 
-        if not qs:
+        if not qs.exists():
             return None
 
         obj = sorted(qs, key=lambda x: (x.get_boundingbox_areal()))[0]
@@ -476,9 +742,6 @@ class GeotagLevel3(models.Model):
 
 
 class GeotagLevel2(models.Model):
-    class Meta:
-        db_table = "geotag_level_2"
-
     lat_min = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
@@ -492,25 +755,36 @@ class GeotagLevel2(models.Model):
         max_digits=11, decimal_places=7, null=True, blank=True
     )
 
-    displayname_short = models.CharField(max_length=255, null=True, blank=True)
-    displayname_full = models.CharField(max_length=255, null=True, blank=True)
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
 
-    postal_town = models.CharField(max_length=120, null=True, blank=True)
-    locality = models.CharField(max_length=120, null=True, blank=True)
-    county = models.CharField(max_length=120, null=True, blank=True)
-    municipality = models.CharField(max_length=120, null=True, blank=True)
-    country_code = models.CharField(max_length=2, null=True, blank=True)
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
 
     distances = models.JSONField(null=True, blank=True)
 
     unique_displayname_object = models.ForeignKey(
-        to="UniqueLocationDisplayname", on_delete=models.SET_NULL, null=True, blank=True
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_level_2_set",
     )
 
     geotag_level_3 = models.ForeignKey(
-        to="GeotagLevel3", null=True, blank=True, on_delete=models.CASCADE
+        to="GeotagLevel3",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="geotag_level_2_set",
     )
+
+    class Meta:
+        db_table = "geotag_level_2"
 
     def get_boundingbox_areal(self) -> float:
         return self.distances["ns"] * self.distances["ew"]
@@ -598,7 +872,7 @@ class GeotagLevel2(models.Model):
             lng_max__gt=bbox_dict["lng_max"],
         )
 
-        if not qs:
+        if not qs.exists():
             return None
 
         obj = sorted(qs, key=lambda x: (x.get_boundingbox_areal()))[0]
@@ -607,9 +881,6 @@ class GeotagLevel2(models.Model):
 
 
 class GeotagLevel1(models.Model):
-    class Meta:
-        db_table = "geotag_level_1_correct"
-
     lat_min = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
@@ -623,25 +894,36 @@ class GeotagLevel1(models.Model):
         max_digits=11, decimal_places=7, null=True, blank=True
     )
 
-    displayname_short = models.CharField(max_length=255, null=True, blank=True)
-    displayname_full = models.CharField(max_length=255, null=True, blank=True)
+    displayname_short = models.CharField(max_length=255, default="", blank=True)
+    displayname_full = models.CharField(max_length=255, default="", blank=True)
 
-    postal_town = models.CharField(max_length=120, null=True, blank=True)
-    locality = models.CharField(max_length=120, null=True, blank=True)
-    county = models.CharField(max_length=120, null=True, blank=True)
-    municipality = models.CharField(max_length=120, null=True, blank=True)
-    country_code = models.CharField(max_length=2, null=True, blank=True)
+    postal_town = models.CharField(max_length=120, default="", blank=True)
+    locality = models.CharField(max_length=120, default="", blank=True)
+    county = models.CharField(max_length=120, default="", blank=True)
+    municipality = models.CharField(max_length=120, default="", blank=True)
+    country_code = models.CharField(max_length=2, default="", blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
 
     distances = models.JSONField(null=True, blank=True)
 
     unique_displayname_object = models.ForeignKey(
-        to="UniqueLocationDisplayname", on_delete=models.SET_NULL, null=True, blank=True
+        to="UniqueLocationDisplayname",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geotag_level_1_set",
     )
 
     geotag_level_2 = models.ForeignKey(
-        to="GeotagLevel2", null=True, blank=True, on_delete=models.CASCADE
+        to="GeotagLevel2",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="geotag_level_1_set",
     )
+
+    class Meta:
+        db_table = "geotag_level_1_correct"
 
     def get_boundingbox_areal(self) -> float:
         return self.distances["ns"] * self.distances["ew"]
@@ -729,7 +1011,7 @@ class GeotagLevel1(models.Model):
             lat_min__lt=lat, lat_max__gt=lat, lng_min__lt=lng, lng_max__gt=lng
         )
 
-        if not qs:
+        if not qs.exists():
             return None
 
         obj = sorted(qs, key=lambda x: (x.get_boundingbox_areal()))[0]
@@ -738,9 +1020,6 @@ class GeotagLevel1(models.Model):
 
 
 class GmapsGpsPoint(models.Model):
-    class Meta:
-        db_table = "gmaps_gpspoint"
-
     lat = models.DecimalField(max_digits=11, decimal_places=7, null=True, blank=True)
     lng = models.DecimalField(max_digits=11, decimal_places=7, null=True, blank=True)
     geotag_level_1 = models.ForeignKey(
@@ -751,7 +1030,18 @@ class GmapsGpsPoint(models.Model):
         blank=True,
     )
 
-    custom_displayname = models.CharField(max_length=120, null=True, blank=True)
+    geotag_lvl_1 = models.ForeignKey(
+        to="GeotagLvl1",
+        on_delete=models.CASCADE,
+        related_name="gps_points",
+        null=True,
+        blank=True,
+    )
+
+    custom_displayname = models.CharField(max_length=120, default="", blank=True)
+
+    class Meta:
+        db_table = "gmaps_gpspoint"
 
     def get_videoitems(self, limit: int):
         return self.videoitems.all()[:limit]
@@ -797,6 +1087,7 @@ class GmapsGpsPoint(models.Model):
 
         if obj.geotag_level_1 is None:
             geotag = GeotagLevel1.get_by_latlng(latlng)
+            geotag2 = Geotag.get_smallest_containing(latlng)
             if not geotag:
                 ScheduledReverseGeotag.schedule_if_not_scheduled(obj)
             else:

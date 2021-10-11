@@ -33,12 +33,28 @@ const Card = ({
       : null,
   );
 
+  const handleSliderChange = useCallback((event) => {
+    setThumbnailUrl(
+      getThumbnailUrl(videoitemId, parseInt(event.target.value, 10)),
+    );
+  }, []);
+
   const [displayOverlay, setDisplayOverlay] = useState(false);
   const [displaySlider, setDisplaySlider] = useState(false);
 
-  const handleSliderChange = useCallback((event) => setThumbnailUrl(
-    getThumbnailUrl(videoitemId, parseInt(event.target.value, 10)),
-  ), []);
+  const hideSlider = () => { setDisplaySlider(false); };
+  const showSlider = () => { setDisplaySlider(true); };
+  const hideOverlay = () => { setDisplayOverlay(false); };
+  const showOverlay = () => { setDisplayOverlay(true); };
+
+  const openModal = useCallback((elementClicked) => {
+    toggleModal({
+      openedFromComponent: 'thumbnailboxOuter',
+      activeModalElement: elementClicked,
+      innerElementId: videoitemId,
+      optionalParams: null,
+    });
+  }, []);
 
   return (
     <Grid
@@ -51,24 +67,19 @@ const Card = ({
     >
       <div
         className={`${styles.card}`}
-        onMouseLeave={() => setDisplaySlider(false)}
-        onMouseEnter={() => setDisplaySlider(true)}
+        onMouseLeave={hideSlider}
+        onMouseEnter={showSlider}
       >
         <Header
           date={date}
           locationDisplayname={locationDisplayname}
-          openModal={(elementClicked) => toggleModal({
-            openedFromComponent: 'thumbnailboxOuter',
-            activeModalElement: elementClicked,
-            innerElementId: videoitemId,
-            optionalParams: null,
-          })}
+          openModal={openModal}
         />
 
         <div
           className={`${styles.thumbnail}`}
-          onMouseEnter={() => setDisplayOverlay(true)}
-          onMouseLeave={() => setDisplayOverlay(false)}
+          onMouseEnter={showOverlay}
+          onMouseLeave={hideOverlay}
         >
 
           <Overlay display={displayOverlay} />
@@ -87,8 +98,8 @@ const Card = ({
           thumbnailsCount={thumbnailsCount}
           onSliderChange={handleSliderChange}
           displaySlider={displaySlider}
-          onMouseEnter={() => setDisplaySlider(true)}
-          onMouseLeave={() => setDisplaySlider(false)}
+          onMouseEnter={showSlider}
+          onMouseLeave={hideSlider}
         />
 
       </div>

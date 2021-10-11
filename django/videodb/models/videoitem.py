@@ -12,14 +12,14 @@ class Videoitem(models.Model):
     videoitem_id = models.CharField(max_length=16, primary_key=True)
     static_thumbnail_count = models.IntegerField(null=True, blank=True)
 
-    exif_camera = models.CharField(max_length=120, null=True, blank=True)
-    exif_dimensions = models.CharField(max_length=120, null=True, blank=True)
-    exif_duration_hhmmss = models.CharField(max_length=120, null=True, blank=True)
+    exif_camera = models.CharField(max_length=120, default="", blank=True)
+    exif_dimensions = models.CharField(max_length=120, default="", blank=True)
+    exif_duration_hhmmss = models.CharField(max_length=120, default="", blank=True)
     exif_duration_sec = models.IntegerField(null=True, blank=True)
     exif_fps = models.DecimalField(
         max_digits=7, decimal_places=3, null=True, blank=True
     )
-    exif_resolution = models.CharField(max_length=120, null=True, blank=True)
+    exif_resolution = models.CharField(max_length=120, default="", blank=True)
     exif_last_modified = models.DateTimeField(null=True, blank=True)
 
     gps_lat = models.DecimalField(
@@ -38,6 +38,9 @@ class Videoitem(models.Model):
 
     users = models.ManyToManyField(to="core_user.User")
     lists = models.ManyToManyField(to="VideoitemsList")
+
+    def __str__(self) -> str:
+        return self.videoitem_id
 
     def get_tags(self) -> dict:
         return (
@@ -107,6 +110,3 @@ class Videoitem(models.Model):
     def remove_from_lists(self, user, videoitems_lists) -> None:
         print("remove from user:", user)
         print("videoitems_lists:", videoitems_lists)
-
-    def __str__(self) -> str:
-        return self.videoitem_id

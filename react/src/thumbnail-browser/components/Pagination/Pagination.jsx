@@ -15,7 +15,7 @@ const Pagination = ({
     handlePageChange(parseInt(newPage, 10) + 1);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const onChangeRowsPerPage = (event) => {
     setViewPerPage(parseInt(event.target.value, 10));
   };
 
@@ -28,7 +28,7 @@ const Pagination = ({
       page={currentPage - 1}
       onPageChange={onPageChange}
       rowsPerPage={viewPerPage}
-      onRowsPerPageChange={handleChangeRowsPerPage}
+      onRowsPerPageChange={onChangeRowsPerPage}
       labelRowsPerPage={defaultLabelRowsPerPage}
       labelDisplayedRows={defaultLabelDisplayedRows}
       rowsPerPageOptions={defaultRowsPerPageOptions}

@@ -9,7 +9,7 @@ class Project(models.Model):
     project_id = models.CharField(max_length=16, primary_key=True)
 
     name = models.CharField(max_length=120)
-    displayname = models.CharField(max_length=120, null=True, blank=True)
+    displayname = models.CharField(max_length=120, default="", blank=True)
 
     creation_year = models.IntegerField(null=True, blank=True)
 

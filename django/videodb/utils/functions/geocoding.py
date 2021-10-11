@@ -1,18 +1,19 @@
 from googlemaps import Client as googlemapsClient
 from geopy import distance, Point
 from backend.dev_settings import GMAPS_TOKEN
+from ...types.types import AddressDict, BoundingBoxDict, LatLngTuple
 
 
-def gmaps_geocode_get_viewport(viewport_json):
+def gmaps_geocode_get_viewport(gmaps_viewport_json: dict) -> BoundingBoxDict:
     viewport = None
-    if viewport_json["northeast"] and viewport_json["southwest"]:
+    if gmaps_viewport_json["northeast"] and gmaps_viewport_json["southwest"]:
         viewport_lat = (
-            viewport_json["northeast"]["lat"],
-            viewport_json["southwest"]["lat"],
+            gmaps_viewport_json["northeast"]["lat"],
+            gmaps_viewport_json["southwest"]["lat"],
         )
         viewport_lng = (
-            viewport_json["northeast"]["lng"],
-            viewport_json["southwest"]["lng"],
+            gmaps_viewport_json["northeast"]["lng"],
+            gmaps_viewport_json["southwest"]["lng"],
         )
         if all([*viewport_lat, *viewport_lng]):
             viewport = {
@@ -25,8 +26,8 @@ def gmaps_geocode_get_viewport(viewport_json):
     return viewport
 
 
-def gmaps_geocode_get_address_dict(address_components_json):
-    if address_components_json is None:
+def gmaps_geocode_get_address_dict(gmaps_address_components_json: dict) -> AddressDict:
+    if gmaps_address_components_json is None:
         return None
     component_type_translations = {
         "administrative_area_level_2": "municipality",
@@ -90,13 +91,13 @@ def gmaps_geocode_get_address_dict(address_components_json):
     parsed_dict = add_missing_dict_keys(
         {
             get_column_name(component): get_component_value(component)
-            for component in address_components_json
+            for component in gmaps_address_components_json
         }
     )
 
     parsed_dict["country_code"] = [
         component["short_name"]
-        for component in address_components_json
+        for component in gmaps_address_components_json
         if "country" in component["types"]
     ][0]
 
@@ -170,48 +171,50 @@ def gmaps_geocode_get_displaynames(address_dict):
     )
 
 
-def format_reverse_geocode_gmaps(geocode_raw):
-    if not geocode_raw or not geocode_raw["address_components"]:
+def format_reverse_geocode_gmaps(gmaps_geocode_raw: dict) -> AddressDict:
+    if not gmaps_geocode_raw or not gmaps_geocode_raw["address_components"]:
         return None
-    address_dict = gmaps_geocode_get_address_dict(geocode_raw["address_components"])
+    address_dict = gmaps_geocode_get_address_dict(
+        gmaps_geocode_raw["address_components"]
+    )
     return address_dict if address_dict else None
 
 
-def gmaps_geocode_get_boundingbox(bounds_json):
+def gmaps_geocode_get_boundingbox(gmaps_bbox_bounds_json: dict) -> BoundingBoxDict:
     if not all(
         [
-            bounds_json["northeast"],
-            bounds_json["southwest"],
-            isinstance(bounds_json["northeast"], dict),
-            isinstance(bounds_json["southwest"], dict),
-            bounds_json["northeast"]["lat"],
-            bounds_json["northeast"]["lng"],
-            bounds_json["southwest"]["lat"],
-            bounds_json["southwest"]["lng"],
+            gmaps_bbox_bounds_json["northeast"],
+            gmaps_bbox_bounds_json["southwest"],
+            isinstance(gmaps_bbox_bounds_json["northeast"], dict),
+            isinstance(gmaps_bbox_bounds_json["southwest"], dict),
+            gmaps_bbox_bounds_json["northeast"]["lat"],
+            gmaps_bbox_bounds_json["northeast"]["lng"],
+            gmaps_bbox_bounds_json["southwest"]["lat"],
+            gmaps_bbox_bounds_json["southwest"]["lng"],
         ]
     ):
         return None
 
     bounds_lat = [
-        bounds_json["northeast"]["lat"],
-        bounds_json["southwest"]["lat"],
+        gmaps_bbox_bounds_json["northeast"]["lat"],
+        gmaps_bbox_bounds_json["southwest"]["lat"],
     ]
     bounds_lng = [
-        bounds_json["northeast"]["lng"],
-        bounds_json["southwest"]["lng"],
+        gmaps_bbox_bounds_json["northeast"]["lng"],
+        gmaps_bbox_bounds_json["southwest"]["lng"],
     ]
 
     point_nw = (
-        bounds_json["northeast"]["lat"],
-        bounds_json["southwest"]["lng"],
+        gmaps_bbox_bounds_json["northeast"]["lat"],
+        gmaps_bbox_bounds_json["southwest"]["lng"],
     )
     point_ne = (
-        bounds_json["northeast"]["lat"],
-        bounds_json["northeast"]["lng"],
+        gmaps_bbox_bounds_json["northeast"]["lat"],
+        gmaps_bbox_bounds_json["northeast"]["lng"],
     )
     point_sw = (
-        bounds_json["southwest"]["lat"],
-        bounds_json["southwest"]["lng"],
+        gmaps_bbox_bounds_json["southwest"]["lat"],
+        gmaps_bbox_bounds_json["southwest"]["lng"],
     )
 
     distances = {
@@ -229,7 +232,7 @@ def gmaps_geocode_get_boundingbox(bounds_json):
     }
 
 
-def get_reverse_geotags_gmaps(latlng, levels=5):
+def get_reverse_geotags_gmaps(latlng: LatLngTuple, levels=5):
     null = [None, "", " "]
     gmaps = googlemapsClient(key=GMAPS_TOKEN)
 

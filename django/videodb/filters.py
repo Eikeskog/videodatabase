@@ -34,7 +34,7 @@ class LocationFilter(django_filters.FilterSet):
         qs = UniqueLocationDisplayname.objects.filter(
             most_specific_field_value__istartswith=value
         )
-        qs_len = len(qs)
+        qs_len = qs.count()
         if qs_len < 10:
             limit = 10 - qs_len
             ids_values = UniqueLocationDisplayname.get_id_value_any_field_startswith(

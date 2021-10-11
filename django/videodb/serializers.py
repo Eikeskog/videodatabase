@@ -1,4 +1,5 @@
 from timeit import default_timer as timer
+from .models.geotags import Geotag, GeotagLvl1, GeotagLvl2
 from rest_framework import serializers
 from .utils.functions.videoitem import get_nearby_videoitems
 from .models.videoitem import Videoitem
@@ -18,6 +19,38 @@ class UniqueSearchfiltersSerializer(serializers.ModelSerializer):
         model = None
 
     def to_representation(self, *args, **kwargs):
+
+        # GeotagLvl1.objects.create(foo='LOLOKOPTER')
+        # GeotagLvl2.objects.create(foo='ROFLERINO')
+
+
+        # foo = GeotagLvl1.objects.all()[0]
+        # foo2 = GeotagLvl2.objects.all()[0]
+        # foo.print_level()
+        # foo2.print_level()
+
+
+        # print(foo.get_parent_class())
+
+        # print(Geotag.objects.all())
+
+        # test = Geotag._get_fields()
+
+        # # print(((test[0].field_name)))
+        # for x in test:
+        #     # print(type(x))
+        #     # print(dir(x))
+        #     print(x.name)
+        #     # print(isinstance(x, 'reverse_related'))
+        #     print(x.get_internal_type())
+
+        # foo2.get_address_dict()
+
+        # foo.say('lol')
+
+        # Geotag.level()
+
+
         # gjøre om det her til en cache
         data = {}
 

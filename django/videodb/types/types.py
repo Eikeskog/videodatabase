@@ -1,11 +1,24 @@
+from decimal import Decimal
 from typing import Literal, TypedDict, Optional, Union
-from ..models.geotags import (
-    GeotagLevel1,
-    GeotagLevel2,
-    GeotagLevel3,
-    GeotagLevel4,
-    GeotagLevel5,
-)
+from numbers import Real
+
+
+LatLngTuple = tuple[Real]
+
+
+class BoundingBoxDict(TypedDict):
+    lat_min: Decimal
+    lat_max: Decimal
+    lng_min: Decimal
+    lng_max: Decimal
+
+
+class InclusionExclusionBoundingBoxDict(TypedDict, total=False):
+    boundingbox: BoundingBoxDict
+    exclude_outer: BoundingBoxDict
+
+
+IncrementalBoundingBoxesDict = dict[str, InclusionExclusionBoundingBoxDict]
 
 
 class AddressDict(TypedDict, total=False):
@@ -14,6 +27,11 @@ class AddressDict(TypedDict, total=False):
     locality: Optional[str]
     municipality: Optional[str]
     postal_town: Optional[str]
+    postal_code: Optional[Union[str, int]]
+    country: Optional[str]
+    formatted_address: Optional[str]
+    displayname_full: Optional[str]
+    displayname_short: Optional[str]
 
 
 class FieldValueNamedDict(TypedDict):
@@ -29,7 +47,14 @@ class AddressParentFieldsComparisonDict(TypedDict):
 IdValueDict = dict[Union[str, int], Union[str, int]]
 
 AddressFieldName = Literal[
-    "country_code", "county", "locality", "postal_town", "municipality"
+    "country_code",
+    "county",
+    "locality",
+    "postal_town",
+    "municipality",
+    "postal_town",
+    "postal_code",
+    "country",
 ]
 
 AddressFieldNameCombination = Literal[
@@ -42,8 +67,6 @@ AddressFieldNameCombination = Literal[
     "county_country",
     "country_code",
 ]
-
-AnyGeotag = Union[GeotagLevel1, GeotagLevel2, GeotagLevel3, GeotagLevel4, GeotagLevel5]
 
 AddressFieldValueDict = dict[AddressFieldName, Union[str, int]]
 

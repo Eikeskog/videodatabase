@@ -3,6 +3,7 @@ import json
 from typing import Optional, Type, TypeVar, Union  # , TypedDict
 from django.db import models
 from django.db.models.base import Model
+from django.db.models.fields import related
 from ..types.enums import StatusMessage
 from .geotags import (
     GeotagLevel1,
@@ -18,13 +19,12 @@ from ..types.types import (
     AddressFieldValueDict,
     AddressNameGroupingsDict,
     AddressParentFieldsComparisonDict,
-    AnyGeotag,
     FieldValueNamedDict,
-    # AddressDict,
     IdValueDict,
 )
 
-SORTED_ADDR_FIELDS = [  # Most to least precise address field.
+# Address fields sorted from least to most precise address field.
+SORTED_ADDR_FIELDS = [
     "locality",
     "postal_town",
     "municipality",
@@ -32,6 +32,7 @@ SORTED_ADDR_FIELDS = [  # Most to least precise address field.
     "country_code",
 ]
 
+# Child to parent address fields.
 ADDR_FIELDS_CHILD_PARENT = {
     "locality": ["postal_town", "municipality", "county"],
     "postal_town": "municipality",
@@ -40,7 +41,7 @@ ADDR_FIELDS_CHILD_PARENT = {
     "country_code": None,
 }
 
-GEOTAG_CLASSES = [
+GEOTAGS_CLS = [
     GeotagLevel1,
     GeotagLevel2,
     GeotagLevel3,
@@ -62,12 +63,12 @@ class UniqueCamera(UniqueSearchfilter):
         db_table = "unique_camera"
         ordering = ["camera"]
 
-    camera = models.CharField(max_length=120, unique=True, null=True, blank=True)
+    camera = models.CharField(max_length=120, unique=True, default="", blank=True)
     camera_unique_searchfilter = models.OneToOneField(
         UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.camera)
 
 
@@ -81,7 +82,7 @@ class UniqueFps(UniqueSearchfilter):
         UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.fps)
 
 
@@ -90,12 +91,12 @@ class UniqueKeyword(UniqueSearchfilter):
         db_table = "unique_keyword"
         ordering = ["keyword"]
 
-    keyword = models.CharField(max_length=120, unique=True, null=True, blank=True)
+    keyword = models.CharField(max_length=120, default="", null=True, blank=True)
     keyword_unique_searchfilter = models.OneToOneField(
         UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.keyword
 
 
@@ -107,10 +108,10 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     unique_json = models.JSONField(null=True, blank=True)
 
     # add new field, or change these to 'most_preferred_field'
-    most_specific_field = models.CharField(max_length=120, null=True, blank=True)
-    most_specific_field_value = models.CharField(max_length=120, null=True, blank=True)
+    most_specific_field = models.CharField(max_length=120, default="", blank=True)
+    most_specific_field_value = models.CharField(max_length=120, default="", blank=True)
 
-    alternative_name = models.CharField(max_length=255, null=True, blank=True)
+    alternative_name = models.CharField(max_length=255, default="", blank=True)
 
     displayname_unique_searchfilter = models.OneToOneField(
         UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
@@ -120,11 +121,13 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     geotags = models.ManyToManyField(to="GeotagLevel1")
     gps_points = models.ManyToManyField(to="GmapsGpsPoint")
 
+    all_geotags = models.ManyToManyField(to="Geotag", related_name="unique_displayname")
+
     @classmethod
     def get_id_value_any_field_startswith(
         cls, str_startswith: str, limit: int = 10
     ) -> IdValueDict:
-        # gjøre om til model fields istedetfor json? raskere søk
+        # note: gjøre om til model fields istedetfor json? raskere søk
         id_values = {}
         c = 0
         for obj in cls.objects.all():
@@ -161,9 +164,11 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     ) -> Optional[tuple[T]]:
         if objects is None:
             return None
-        objs = list(objects)
-        objs.sort(key=lambda obj: len(obj.get_unique_address_fields_not_null().keys()))
-        return tuple(objs)
+        objs_list = list(objects)
+        objs_list.sort(
+            key=lambda obj: len(obj.get_unique_address_fields_not_null().keys())
+        )
+        return tuple(objs_list)
 
     @classmethod
     def compare_addresses_get_parent_field_difference(
@@ -208,40 +213,66 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         address_dict1: AddressDict,
         address_dict2: AddressDict,
         field_name: AddressFieldName,
+        postal_town_as_locality: bool = True,
     ) -> bool:
         """
-        Compares a single field in two address dicts.
-        Returns true if field values are different.
+        Compares a single field in two address dictionaries.
 
-        Locality and postal_town are treated as aliases,
-        so will return false if locality == postal_town.
+        Constraints:
+        * Specified field_name must be present in address_dict1.
+        * If there is difference in address precision,
+        the dictionaries must be sorted beforehand,
+        so that adress_dict2 is the most precise.
+
+        Returns true if field values are different
+        or if field is missing in address_dict2.
+
+        postal_town_as_locality:
+        * If True, locality and postal_town are treated as aliases.
+        Will then return false if locality == postal_town.
         """
 
+        if not field_name:
+            raise AssertionError("field_name must be specified")
+
+        if not field_name not in address_dict1:
+            raise AssertionError("field_name must be present in address_dict1")
+
         if field_name not in ["locality", "postal_town"]:
-            if address_dict1[field_name] != address_dict2[field_name]:
+            if (
+                field_name not in address_dict2
+                or address_dict1[field_name] != address_dict2[field_name]
+            ):
                 return True
             return False
 
+        if not postal_town_as_locality:
+            return True
+
         if field_name == "locality":
-            if "postal_town" in field_name:
-                if address_dict1["locality"] == address_dict2["postal_town"]:
-                    return False
-                return True
+            if (
+                "postal_town" in address_dict2
+                and address_dict1["locality"] == address_dict2["postal_town"]
+            ):
+                return False
+            return True
 
         if field_name == "postal_town":
-            if "locality" in address_dict2:
-                if address_dict1["postal_town"] == address_dict2["locality"]:
-                    return False
-                return True
+            if (
+                "locality" in address_dict2
+                and address_dict1["postal_town"] == address_dict2["locality"]
+            ):
+                return False
+            return True
 
     @classmethod
     def is_different_location(
         cls, address_dict_min: AddressDict, address_dict_max: AddressDict
     ) -> bool:
         """
-        Compares two address dicts field for field.
+        Compares two address dictionaries, field for field.
 
-        Dicts must be sorted on field count,
+        Dictionaries must be sorted on field count,
         so that the dict with least number of fields
         (lowest precision) can be used as reference.
 
@@ -321,10 +352,11 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         from_field: Union[AddressFieldName, list[AddressFieldName]] = None,
     ) -> Optional[FieldValueNamedDict]:
         """
-        Returns closest parent value of any starting address field
+        Returns closest parent field value of any starting address field
         in a class instance.
 
         Allows multiple alternatives for parents.
+        Child-parent relations are defined in global ADDR_FIELDS_CHILD_PARENT.
         """
 
         if from_field is None:
@@ -371,10 +403,10 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
                 "postal_town": address_dict["postal_town"],
                 "municipality": address_dict["municipality"],
             },
-            "postal_town_locality": {
-                "postal_town": address_dict["postal_town"],
-                "locality": address_dict["locality"],
-            },
+            # "postal_town_locality": {
+            #     "postal_town": address_dict["postal_town"],
+            #     "locality": address_dict["locality"],
+            # },
             "postal_town_county": {
                 "postal_town": address_dict["postal_town"],
                 "county": address_dict["county"],
@@ -416,7 +448,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         return (field, value)
 
     @classmethod
-    def displayname_variants_from_address_dict(
+    def address_dict_displayname_variants(
         cls, address_dict: AddressDict
     ) -> list[str]:
         """
@@ -473,12 +505,12 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     @classmethod
     def all_geotags_as_address_dicts(cls) -> list[AddressDict]:
         dicts = []
-        for _class in GEOTAG_CLASSES:
+        for _class in GEOTAGS_CLS:
             dicts += _class.objects.all().values(*SORTED_ADDR_FIELDS)
         return dicts
 
     def link_to_geotags(self, address: AddressDict) -> None:
-        for _class in GEOTAG_CLASSES:
+        for _class in GEOTAGS_CLS:
             for obj in _class.objects.filter(**address):
                 obj.unique_displayname_object = self
                 obj.save()
@@ -495,7 +527,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
             name_variations = {}
             name_variations[
                 "displayname_variants"
-            ] = cls.displayname_variants_from_address_dict(address_dict)
+            ] = cls.address_dict_displayname_variants(address_dict)
             name_variations["unique_fields_include_null"] = dict(address_dict.items())
 
             as_json = json.dumps(name_variations, sort_keys=True)
@@ -534,6 +566,6 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         ...
 
     def __str__(self):
-        if self.alternative_name is None:
+        if self.alternative_name is "":
             return str(self.most_specific_field_value)
         return str(self.alternative_name)

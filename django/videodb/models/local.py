@@ -20,7 +20,7 @@ class Disk(models.Model):
 
     disk_serial_number = models.CharField(max_length=120, primary_key=True)
 
-    name = models.CharField(max_length=120, null=True, blank=True)
+    name = models.CharField(max_length=120, default="", blank=True)
     year = models.IntegerField(null=True, blank=True)
 
     size_bytes = models.PositiveBigIntegerField(null=True, blank=True)
@@ -45,7 +45,13 @@ class RootDirectory(models.Model):
         db_table = "root_directory"
 
     path = models.CharField(max_length=255, unique=True)
-    disk = models.ForeignKey(to=Disk, null=True, blank=True, on_delete=models.CASCADE)
+    disk = models.ForeignKey(
+        to=Disk,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="rootdirectory_set",
+    )
 
     @classmethod
     def path_as_instance(cls, path: str) -> object:
@@ -78,10 +84,18 @@ class ProjectMainDirectory(models.Model):
 
     path = models.CharField(max_length=255, unique=True)
     project = models.ForeignKey(
-        to="Project", null=True, blank=True, on_delete=models.CASCADE
+        to="Project",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="projectmaindirectory_set",
     )
     root_directory = models.ForeignKey(
-        to="RootDirectory", null=True, blank=True, on_delete=models.CASCADE
+        to="RootDirectory",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="projectmaindirectory_set",
     )
 
     @classmethod
@@ -112,10 +126,14 @@ class ProjectRollDirectory(models.Model):
         db_table = "project_roll_directory"
 
     path = models.CharField(max_length=255, unique=True)
-    rolltype = models.CharField(max_length=32, null=True, blank=True)
+    rolltype = models.CharField(max_length=32, default="", blank=True)
 
     project_main_directory = models.ForeignKey(
-        to=ProjectMainDirectory, on_delete=models.CASCADE, null=True, blank=True
+        to=ProjectMainDirectory,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="projectrolldirectory_set",
     )
 
     # rydd opp
@@ -146,15 +164,23 @@ class LocalDirectory(models.Model):
         db_table = "local_directory"
 
     path = models.CharField(max_length=255, unique=True)
-    name = models.CharField(max_length=120, null=True, blank=True)
+    name = models.CharField(max_length=120, default="", blank=True)
 
     parent_foreign = models.ForeignKey(
-        to="self", null=True, blank=True, on_delete=models.CASCADE
+        to="self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="localdirectory_set",
     )
-    parent = models.CharField(max_length=120, null=True, blank=True)
+    parent = models.CharField(max_length=120, default="", blank=True)
 
     project_roll_directory = models.ForeignKey(
-        to=ProjectRollDirectory, on_delete=models.CASCADE, null=True, blank=True
+        to=ProjectRollDirectory,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="localdirectory_set",
     )
 
     @classmethod
@@ -186,11 +212,11 @@ class LocalFile(models.Model):
 
     file_path = models.CharField(max_length=255, primary_key=True)
     file_rolltype = models.CharField(
-        max_length=255, null=True, blank=True
+        max_length=255, default="", blank=True
     )  # denne burde være i directory
-    directory_old = models.CharField(max_length=255, null=True, blank=True)
-    file_name = models.CharField(max_length=120, null=True, blank=True)
-    path = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    directory_old = models.CharField(max_length=255, default="", blank=True)
+    file_name = models.CharField(max_length=120, default="", blank=True)
+    path = models.CharField(max_length=255, default="", blank=True, unique=True)
     videoitem = models.ForeignKey(
         to="Videoitem",
         on_delete=models.CASCADE,
@@ -198,9 +224,13 @@ class LocalFile(models.Model):
         null=True,
         blank=True,
     )
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, default="", blank=True)
     directory = models.ForeignKey(
-        to=LocalDirectory, on_delete=models.SET_NULL, null=True, blank=True
+        to=LocalDirectory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="localfile_set",
     )
 
     def get_directory(self) -> dict:
