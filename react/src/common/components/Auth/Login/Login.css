@@ -44,7 +44,7 @@ hr:not([size]) {
 .main-section {
   max-width: 1399px;
   overflow: hidden;
-  padding: 125px 100px 195px 100px;
+  padding: 125px 100px 195px;
   margin: 0 auto;
 }
 
@@ -216,7 +216,7 @@ form > a:last-of-type:hover{
 
 .copy-right {
 color: #8a8d91;
-padding: 12px 0px 0 0px;
+padding: 12px 0 0;
 margin-bottom: 30px;
 margin-top: 18px;
 font-size: 11px;
@@ -250,7 +250,7 @@ margin-top: -11px;
 *************************************************/
 @media (max-width:1200px) and (min-width:901px){
   .main-section {
-      padding: 125px 0px 195px 0px;
+      padding: 125px 0 195px;
   }
 
   .footer-contect {
@@ -292,7 +292,7 @@ margin-top: -11px;
   }
 
   .lan-sec {
-      margin-bottom: 0px;
+      margin-bottom: 0;
       margin-top: 20px;
   }
 
