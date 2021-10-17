@@ -10,20 +10,19 @@ from .models.unique_searchfilter import (
     UniqueFps,
 )
 from .models.geotags import (
-    GeotagLevel1,
-    GeotagLevel2,
-    GeotagLevel3,
-    GeotagLevel4,
-    GeotagLevel5,
+    GeotagLvl1,
+    GeotagLvl2,
+    GeotagLvl3,
+    GeotagLvl4,
+    GeotagLvl5,
 )
 
-
 GEOTAG_CLASSES = [
-    GeotagLevel1,
-    GeotagLevel2,
-    GeotagLevel3,
-    GeotagLevel4,
-    GeotagLevel5,
+    GeotagLvl1,
+    GeotagLvl2,
+    GeotagLvl3,
+    GeotagLvl4,
+    GeotagLvl5,
 ]
 
 
@@ -37,9 +36,10 @@ class LocationFilter(django_filters.FilterSet):
         qs_len = qs.count()
         if qs_len < 10:
             limit = 10 - qs_len
-            ids_values = UniqueLocationDisplayname.get_id_value_any_field_startswith(
+            ids_values = UniqueLocationDisplayname.any_field_startswith(
                 str_startswith=value, limit=limit
             )
+            print(ids_values)
             if ids_values:
                 new_qs = UniqueLocationDisplayname.objects.exclude(id__in=qs).filter(
                     id__in=list(ids_values.keys())
@@ -60,6 +60,48 @@ class VideoitemsFilter(django_filters.FilterSet):
     daterange__in = django_filters.CharFilter(method="daterange_filter")
     keyword__in = django_filters.CharFilter(method="keyword_filter")
     project__in = django_filters.CharFilter(method="project_filter")
+
+    def location_displayname_filter(self, queryset, name, value):
+        ids = value.split(",")
+
+        geotags_query = Q()
+
+        for obj in UniqueLocationDisplayname.objects.filter(id__in=ids):
+            not_null_fields = obj._get_unique_address_fields_not_null()
+            # print(not_null_fields)
+            # print(f'biatch {Geotag.objects.filter(**not_null_fields)}')
+            geotags_query |= Q(**not_null_fields) | Q(
+                unique_displayname_object_id__in=ids
+            )
+
+        geotags_qs = [
+            geotag_class.objects.filter(geotags_query)
+            for geotag_class in GEOTAG_CLASSES
+        ]
+
+        # geotags_qs = Geotag.objects.filter(geotags_query)
+
+        # build nested reverse lookups for geotags
+        # level_1 = "gmaps_gps_point_id__geotag_level_1_id"
+        # level_2 = f"{level_1}__geotag_level_2_id"
+        # level_3 = f"{level_2}__geotag_level_3_id"
+        # level_4 = f"{level_3}__geotag_level_4_id"
+        # level_5 = f"{level_4}__geotag_level_5_id"
+        level_1 = "gmaps_gps_point_id__geotag_lvl_1_id"
+        level_2 = f"{level_1}__parent_id"
+        level_3 = f"{level_2}__parent_id"
+        level_4 = f"{level_3}__parent_id"
+        level_5 = f"{level_4}__parent_id"
+        query = (
+            Q(**{f"{level_1}__in": geotags_qs[0]})
+            | Q(**{f"{level_2}__in": geotags_qs[1]})
+            | Q(**{f"{level_3}__in": geotags_qs[2]})
+            | Q(**{f"{level_4}__in": geotags_qs[3]})
+            | Q(**{f"{level_5}__in": geotags_qs[4]})
+        )
+        # print(level_5)
+
+        return queryset.exclude(gmaps_gps_point__isnull=True).filter(query)
 
     def daterange_filter(self, queryset, name, value):
         query = Q()
@@ -126,38 +168,3 @@ class VideoitemsFilter(django_filters.FilterSet):
                 **{reverse_lookup: value.split(",")}
             ).values_list("videoitem", flat=True)
         )
-
-    # rewrite
-    def location_displayname_filter(self, queryset, name, value):
-        ids = value.split(",")
-
-        geotags_query = Q()
-
-        for obj in UniqueLocationDisplayname.objects.filter(id__in=ids):
-            not_null_fields = obj.get_unique_address_fields_not_null()
-
-            geotags_query |= Q(**not_null_fields) | Q(
-                unique_displayname_object_id__in=ids
-            )
-
-        geotags_qs = [
-            geotag_class.objects.filter(geotags_query)
-            for geotag_class in GEOTAG_CLASSES
-        ]
-
-        # build nested reverse lookups for geotags
-        level_1 = "gmaps_gps_point_id__geotag_level_1_id"
-        level_2 = f"{level_1}__geotag_level_2_id"
-        level_3 = f"{level_2}__geotag_level_3_id"
-        level_4 = f"{level_3}__geotag_level_4_id"
-        level_5 = f"{level_4}__geotag_level_5_id"
-
-        query = (
-            Q(**{f"{level_1}__in": geotags_qs[0]})
-            | Q(**{f"{level_2}__in": geotags_qs[1]})
-            | Q(**{f"{level_3}__in": geotags_qs[2]})
-            | Q(**{f"{level_4}__in": geotags_qs[3]})
-            | Q(**{f"{level_5}__in": geotags_qs[4]})
-        )
-
-        return queryset.exclude(gmaps_gps_point__isnull=True).filter(query)

@@ -1,5 +1,4 @@
 from timeit import default_timer as timer
-from .models.geotags import Geotag, GeotagLvl1, GeotagLvl2
 from rest_framework import serializers
 from .utils.functions.videoitem import get_nearby_videoitems
 from .models.videoitem import Videoitem
@@ -14,44 +13,54 @@ from .models.unique_searchfilter import (
 )
 
 
+# def _reset_all_geotags() -> None:
+#     ScheduledReverseGeotag.objects.all().delete()
+#     Geotag.objects.all().delete
+
+#     for obj in Videoitem.objects.filter(gps_lat__isnull=False):
+#         point = (obj.gps_lat, obj.gps_lng)
+#         GmapsGpsPoint.get_by_latlng(point)
+
+#     ScheduledReverseGeotag.run_batch_reverse()
+
+
+# def _show_sorted_geotag_areals() -> None:
+#     geotags = []
+#     geotag_cls = [GeotagLvl1, GeotagLvl2, GeotagLvl3, GeotagLvl4, GeotagLvl5]
+#     for i, c in enumerate(geotag_cls):
+#         geotags.append(list(c.objects.all().order_by('areal').values('id', 'areal')))
+#         print(f'class {i+1}:')
+#         print(geotags[i])
+#         print(f'min? {geotags[i][0]} - max? {geotags[i][-1]}')
+
+
 class UniqueSearchfiltersSerializer(serializers.ModelSerializer):
     class Meta:
         model = None
 
     def to_representation(self, *args, **kwargs):
+        # Geotag.objects.all().delete()
+        # GmapsGpsPoint.objects.all().delete()
+        # ScheduledReverseGeotag.objects.all().delete()
+        # ScheduledReverseGeotag.run_batch_reverse()
 
-        # GeotagLvl1.objects.create(foo='LOLOKOPTER')
-        # GeotagLvl2.objects.create(foo='ROFLERINO')
+        # for x in Videoitem.objects.exclude(gps_lat__isnull=True):
+        #     latlng = (x.gps_lat, x.gps_lng)
+        #     x.gmaps_gps_point = GmapsGpsPoint.get_by_latlng(latlng)
+        #     x.save()
 
+        # UniqueLocationDisplayname._rebuild()
+        # for x in UniqueLocationDisplayname.objects.all():
+        #     # m_dict = model_to_dict(x)
+        #     # addr = {k: v for k,v in json.loads(m_dict["unique_json"])["unique_fields_include_null"].items() if v}
+        #     # print(addr)
+        #     # # addr2 = x.unique_fields_not_null()
+        #     x._link_to_geotags(addr)
+        # print()
+        # for x in UniqueLocationDisplayname._all_geotags_as_address_dicts():
+        # for obj in UniqueLocationDisplayname.objects.all():
+        #     obj._link_to_geotags(x)
 
-        # foo = GeotagLvl1.objects.all()[0]
-        # foo2 = GeotagLvl2.objects.all()[0]
-        # foo.print_level()
-        # foo2.print_level()
-
-
-        # print(foo.get_parent_class())
-
-        # print(Geotag.objects.all())
-
-        # test = Geotag._get_fields()
-
-        # # print(((test[0].field_name)))
-        # for x in test:
-        #     # print(type(x))
-        #     # print(dir(x))
-        #     print(x.name)
-        #     # print(isinstance(x, 'reverse_related'))
-        #     print(x.get_internal_type())
-
-        # foo2.get_address_dict()
-
-        # foo.say('lol')
-
-        # Geotag.level()
-
-
-        # gjøre om det her til en cache
         data = {}
 
         cameras = UniqueCamera.objects.all()[:15]
@@ -175,7 +184,6 @@ class VideoitemsListSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["created_by"] = int(instance.created_by.id)
-        # videoitems =
         return data
 
 
@@ -197,10 +205,11 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
             return None
 
         user = request.user
-        user_lists = obj.videoitemslist_set.filter(created_by=user)
+        user_lists = obj.videoitemslist_set.filter(created_by=user).values_list(
+            "pk", flat=True
+        )
 
-        return [x.id for x in user_lists]
-        # VideoitemsListSerializer(in_user_lists, many=True).data
+        return user_lists
 
     def validate(self, data):
         return super().validate(data)
@@ -209,12 +218,10 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
         t0 = timer()
         data = super().to_representation(instance)
         data["location_displayname"] = instance.get_displayname_short()
-        # nearby items er en bottleneck, tar ca 100 ms å kjøre sånn det er nå
-
+        # nearby items er en liten bottleneck, tar 15-20 ms å kjøre sånn det er nå.
         # mulige alternativer for løsninger:
-        # bruke geospatial fields på modeller(gps-punkt og bbox),
-        # cache, webworkers, lazy load.
-        # selve funksjonen gjør også mye nå, så kutte ned på hva den gjør...
+        # cache, bruke geospatial fields på modeller(gps-punkt og bbox)
+        # eller forandre på frontend: eks webworker, lazy load.
         data["nearby_items"] = (
             get_nearby_videoitems(instance)
             if instance.gmaps_gps_point is not None
@@ -225,6 +232,7 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
 
         t1 = timer()
         print("elapsed:", t1 - t0)
+        # print(data["nearby_items"])
         return data
 
 

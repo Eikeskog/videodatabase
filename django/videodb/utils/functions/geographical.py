@@ -1,9 +1,13 @@
 import math
-from typing import Optional
-from ...types.types import BoundingBoxDict, IncrementalBoundingBoxesDict
 from numbers import Real
 from decimal import Decimal
+from typing import Optional
 from .common import is_all_numeric, is_list_or_tuple, is_numeric
+from ...types.types import (
+    BoundingBoxDict,
+    IncrementalBoundingBoxesDict,
+    NumberOrNumbersList,
+)
 
 
 def get_bounding_box(
@@ -12,9 +16,13 @@ def get_bounding_box(
     half_side_in_km: Real = None,
 ) -> BoundingBoxDict:
     """
-    Calculates a square boundingbox from any given geograhical center.
+    Calculates a square boundingbox from any
+    given geograhical center.
+
     half_side_in_km defines the size of the box.
-    Returns a dictionary of lat_min, lat_max, lng_min, lng_max.
+
+    Return a BoundingBoxDict with keys:
+    lat_min, lat_max, lng_min, lng_max.
     """
     if not all([latitude_in_degrees, longitude_in_degrees, half_side_in_km]):
         return None
@@ -51,12 +59,12 @@ def get_bounding_box(
 def get_boundingboxes_incremental_steps(
     lat: Real,
     lng: Real,
-    steps_m: Optional[list[Real]] = None,
+    steps_m: Optional[NumberOrNumbersList] = None,
     exclude_prev_step_inner: bool = True,
 ) -> IncrementalBoundingBoxesDict:
     """
     Returns a dictionary of square boundingboxes
-    in meter-incremented steps, where each . Sorted from
+    in meter-incremented steps. Sorted from
     smallest to largest boundingbox.
     """
     if not is_all_numeric([lat, lng]):
@@ -70,8 +78,9 @@ def get_boundingboxes_incremental_steps(
         if not is_list_or_tuple(steps_m):
             if is_numeric(steps_m):
                 km = steps_m / 1000
-                ret = {str(steps_m): {"boundingbox": get_bounding_box(lat, lng, km)}}
-                return ret
+                bbox: BoundingBoxDict = get_bounding_box(lat, lng, km)
+                key = str(steps_m)
+                return {key: {"boundingbox": bbox}}
             else:
                 return None
 
@@ -91,11 +100,8 @@ def get_boundingboxes_incremental_steps(
         }
 
         if exclude_prev_step_inner and i > 0:
-            prev_km = steps_m[(i - 1)] / 1000
-            boundingboxes[key]["exclude_inner"] = get_bounding_box(lat, lng, prev_km)
+            prev_key = str(steps_m[(i - 1)])
+            prev_bbox = boundingboxes[prev_key]["boundingbox"]
+            boundingboxes[key]["exclude_inner"] = prev_bbox
 
     return boundingboxes
-
-
-# def calculate_distance(latlng1,latlng2):
-#   return geopy.distance.distance(latlng1,latlng2)

@@ -53,8 +53,6 @@ class KeywordHintsView(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class LocationHintsView(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """View for location typinghints."""
-
     permission_classes = (IsAuthenticated,)
     serializer_class = TypingHintsSerializer
     queryset = UniqueLocationDisplayname.objects.all()
@@ -77,6 +75,7 @@ class InitSearchfilterDropdowns(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class VideoitemsListView(viewsets.ModelViewSet):
+    # work in progress
     """Views and methods for handling user lists."""
 
     permission_classes = (IsAuthenticated,)

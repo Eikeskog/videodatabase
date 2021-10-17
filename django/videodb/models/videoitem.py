@@ -28,6 +28,7 @@ class Videoitem(models.Model):
     gps_lng = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
+
     gmaps_gps_point = models.ForeignKey(
         to=GmapsGpsPoint,
         related_name="videoitems",
@@ -55,6 +56,7 @@ class Videoitem(models.Model):
             )
         )
 
+    # wip
     def get_gps_suggestions_local_dir(self) -> dict:
         data = (
             LocalFile.objects.filter(
@@ -71,7 +73,7 @@ class Videoitem(models.Model):
                 displayname_id=F(
                     "videoitem_id__"
                     "gmaps_gps_point_id__"
-                    "geotag_level_1_id__"
+                    "geotag_lvl_1_id__"
                     "unique_displayname_object"
                 ),
             )

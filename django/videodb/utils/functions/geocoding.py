@@ -1,62 +1,101 @@
-from googlemaps import Client as googlemapsClient
+import re
+from typing import Optional
+from googlemaps import Client as GoogleMapsClient
 from geopy import distance, Point
-from backend.dev_settings import GMAPS_TOKEN
-from ...types.types import AddressDict, BoundingBoxDict, LatLngTuple
+
+try:
+    from backend.dev_settings import GMAPS_TOKEN
+    from ...types.types import AddressDict, LatLngTuple, GeocodeDict, BoundingBoxDict
+except ModuleNotFoundError:
+    from dev_settings import GMAPS_TOKEN
+    from dev_types import AddressDict, LatLngTuple, GeocodeDict, BoundingBoxDict
 
 
-def gmaps_geocode_get_viewport(gmaps_viewport_json: dict) -> BoundingBoxDict:
+COMPONENT_TYPE_TRANSLL = {
+    "administrative_area_level_2": "municipality",
+    "administrative_area_level_1": "county",
+}
+
+COUNTRY_CODES = {"NORWAY": "NO"}
+
+REMOVE_WORDS = [
+    "Fylke",
+    "fylke",
+    "Kommune",
+    "kommune",
+    "Municipality",
+    "municipality",
+    "County",
+    "county",
+]
+
+DISPLAYNAME_EXCLUDE = [
+    "postal_code",
+    "street_number",
+    "displayname_short",
+    "displayname_full",
+    "formatted_address",
+    "country",
+    "plus_code",
+]
+
+PREPEND_COUNTRY_CODE = "COUNTRY_CODE__"
+
+DISPLAYNAME_SHORT_POS1 = ["postal_town", "locality", "municipality", "county"]
+
+DISPLAYNAME_SHORT_POS2 = ["county", "municipality", "country_code"]
+
+ADDR_DICT_KEYS = [
+    "displayname_full",
+    "displayname_short",
+    "locality",
+    "postal_town",
+    "county",
+    "municipality",
+    "country",
+    "postal_code",
+    "formatted_address",
+    "country_code",
+]
+
+NE = "northeast"
+SW = "southwest"
+
+LAT = "lat"
+LNG = "lng"
+
+LVL_KEY_PREPEND = "level_"
+
+NULL = [None, "", " "]
+
+
+def gmaps_geocode_get_viewport(viewport_json: dict) -> Optional[BoundingBoxDict]:
     viewport = None
-    if gmaps_viewport_json["northeast"] and gmaps_viewport_json["southwest"]:
-        viewport_lat = (
-            gmaps_viewport_json["northeast"]["lat"],
-            gmaps_viewport_json["southwest"]["lat"],
-        )
-        viewport_lng = (
-            gmaps_viewport_json["northeast"]["lng"],
-            gmaps_viewport_json["southwest"]["lng"],
-        )
-        if all([*viewport_lat, *viewport_lng]):
+    if viewport_json[NE] and viewport_json[SW]:
+        lat = (viewport_json[NE][LAT], viewport_json[SW][LAT])
+        lng = (viewport_json[NE][LNG], viewport_json[SW][LNG])
+        if all([*lat, *lng]):
             viewport = {
-                "lat_min": min(viewport_lat),
-                "lat_max": max(viewport_lat),
-                "lng_min": min(viewport_lng),
-                "lng_max": max(viewport_lng),
+                "lat_min": min(lat),
+                "lat_max": max(lat),
+                "lng_min": min(lng),
+                "lng_max": max(lng),
             }
-
     return viewport
 
 
-def gmaps_geocode_get_address_dict(gmaps_address_components_json: dict) -> AddressDict:
+def gmaps_geocode_get_address_dict(
+    gmaps_address_components_json: dict,
+) -> Optional[AddressDict]:
     if gmaps_address_components_json is None:
         return None
-    component_type_translations = {
-        "administrative_area_level_2": "municipality",
-        "administrative_area_level_1": "county",
-    }
-    remove_words = [
-        "Fylke",
-        "fylke",
-        "Kommune",
-        "kommune",
-        "Municipality",
-        "municipality",
-        "County",
-        "county",
-    ]
 
-    def clean_str(string):
-        for word in remove_words:
+    def clean_str(string) -> str:
+        for word in REMOVE_WORDS:
             string = string.replace(word, "").strip()
         return string
 
-    def get_column_name(component):
-        component_type = get_component_type(component)
-        if component_type in component_type_translations:
-            return component_type_translations[component_type]
-        else:
-            return component_type
-
-    def get_component_type(component_json):
+    def get_component_type(component_json: dict) -> str:
         return str(
             max(
                 [type for type in component_json["types"] if type != "political"],
@@ -66,161 +105,113 @@ def gmaps_geocode_get_address_dict(gmaps_address_components_json: dict) -> Addre
             else component_json["types"][0]
         )
 
-    def get_component_value(component):
-        return clean_str(max(set([component["short_name"], component["long_name"]])))
+    def get_column_name(component_json: dict) -> str:
+        component_type = get_component_type(component_json)
+        if component_type in COMPONENT_TYPE_TRANSLL:
+            return COMPONENT_TYPE_TRANSLL[component_type]
+        else:
+            return component_type
 
-    def add_missing_dict_keys(parsed_dict):
-        all_keys = [
-            "displayname_full",
-            "displayname_short",
-            "locality",
-            "postal_town",
-            "county",
-            "municipality",
-            "country",
-            "postal_code",
-            "formatted_address",
-            "country_code",
-        ]
+    def get_component_value(component_json: dict) -> str:
+        return clean_str(
+            max(set([component_json["short_name"], component_json["long_name"]]))
+        )
 
-        return {
-            **parsed_dict,
-            **{x: None for x in all_keys if x not in parsed_dict.keys()},
+    def add_missing_dict_keys(addr_dict: AddressDict) -> AddressDict:
+        full_addr_dict = {
+            **addr_dict,
+            **{x: None for x in ADDR_DICT_KEYS if x not in addr_dict.keys()},
         }
+        return full_addr_dict
 
-    parsed_dict = add_missing_dict_keys(
+    address_dict = add_missing_dict_keys(
         {
             get_column_name(component): get_component_value(component)
             for component in gmaps_address_components_json
         }
     )
 
-    parsed_dict["country_code"] = [
+    address_dict["country_code"] = [
         component["short_name"]
         for component in gmaps_address_components_json
         if "country" in component["types"]
     ][0]
 
-    displaynames = gmaps_geocode_get_displaynames(parsed_dict)
+    displaynames = gmaps_geocode_get_displaynames(address_dict)
 
-    return {**parsed_dict, **displaynames}
+    return {**address_dict, **displaynames}
 
 
-def gmaps_geocode_get_displaynames(address_dict):
+def get_displayname_full(
+    address_dict: AddressDict, exclude=DISPLAYNAME_EXCLUDE
+) -> Optional[str]:
+    positions = [
+        column
+        for column, value in address_dict.items()
+        if not any([value is None, column in exclude])
+    ]
+    displayname_full = ",".join(list(dict.fromkeys(positions)))
+
+    return displayname_full.strip() if displayname_full else None
+
+
+def get_displayname_short(address_dict: AddressDict) -> Optional[str]:
+    pos1 = [x for x in DISPLAYNAME_SHORT_POS1 if address_dict[x] is not None] or [None]
+    pos2 = [
+        x
+        for x in DISPLAYNAME_SHORT_POS2
+        if not any([address_dict[x] is None, x == pos1[0]])
+    ] or [None]
+
+    if all([pos1[0], pos2[0]]):
+        displayname_short = ",".join([pos1[0], pos2[0]])
+    else:
+        displayname_short = None
+    return displayname_short.strip() if displayname_short else None
+
+
+def gmaps_geocode_get_displaynames(address_dict: AddressDict) -> Optional[dict]:
     if not address_dict or not isinstance(address_dict, dict):
         return None
-    exclude_columns = [
-        "postal_code",
-        "street_number",
-        "displayname_short",
-        "displayname_full",
-        "formatted_address",
-        "country",
-    ]
+
+    exclude_columns = DISPLAYNAME_EXCLUDE
 
     if address_dict["county"] == "Oslo":
+        exclude_columns = list(DISPLAYNAME_EXCLUDE)
         exclude_columns += ["county", "municipality"]
 
-    def get_displayname_full(address_dict):
-        displayname_full = ",".join(
-            list(
-                dict.fromkeys(
-                    [
-                        column
-                        for column, value in address_dict.items()
-                        if not any([value is None, column in exclude_columns])
-                    ]
-                )
-            )
-        )
-
-        return displayname_full.strip() if displayname_full else None
-
-    def get_displayname_short(address_dict):
-        pos1 = [
-            x
-            for x in [
-                "postal_town",
-                "locality",
-                "municipality",
-                "county",
-                "postal_code",
-            ]
-            if address_dict[x] is not None
-        ] or [None]
-
-        pos2 = [
-            x
-            for x in ["county", "municipality", "country_code"]
-            if not any([address_dict[x] is None, x == pos1[0]])
-        ] or [None]
-
-        displayname_short = (
-            ",".join(
-                list(dict.fromkeys([x for x in [pos1[0], pos2[0]] if x is not None]))
-            )
-            if any([pos1[0], pos2])
-            else None
-        )
-
-        return displayname_short.strip() if displayname_short else None
-
-    return dict(
-        displayname_short=get_displayname_short(address_dict),
-        displayname_full=get_displayname_full(address_dict),
-    )
+    return {
+        "displayname_short": get_displayname_short(address_dict),
+        "displayname_full": get_displayname_full(address_dict, exclude=exclude_columns),
+    }
 
 
-def format_reverse_geocode_gmaps(gmaps_geocode_raw: dict) -> AddressDict:
-    if not gmaps_geocode_raw or not gmaps_geocode_raw["address_components"]:
-        return None
-    address_dict = gmaps_geocode_get_address_dict(
-        gmaps_geocode_raw["address_components"]
-    )
-    return address_dict if address_dict else None
-
-
-def gmaps_geocode_get_boundingbox(gmaps_bbox_bounds_json: dict) -> BoundingBoxDict:
+def gmaps_geocode_get_boundingbox(bbox_json: dict) -> Optional[BoundingBoxDict]:
     if not all(
         [
-            gmaps_bbox_bounds_json["northeast"],
-            gmaps_bbox_bounds_json["southwest"],
-            isinstance(gmaps_bbox_bounds_json["northeast"], dict),
-            isinstance(gmaps_bbox_bounds_json["southwest"], dict),
-            gmaps_bbox_bounds_json["northeast"]["lat"],
-            gmaps_bbox_bounds_json["northeast"]["lng"],
-            gmaps_bbox_bounds_json["southwest"]["lat"],
-            gmaps_bbox_bounds_json["southwest"]["lng"],
+            bbox_json[NE],
+            bbox_json[SW],
+            isinstance(bbox_json[NE], dict),
+            isinstance(bbox_json[SW], dict),
+            bbox_json[NE][LAT],
+            bbox_json[NE][LNG],
+            bbox_json[SW][LAT],
+            bbox_json[SW][LNG],
         ]
     ):
         return None
 
-    bounds_lat = [
-        gmaps_bbox_bounds_json["northeast"]["lat"],
-        gmaps_bbox_bounds_json["southwest"]["lat"],
-    ]
-    bounds_lng = [
-        gmaps_bbox_bounds_json["northeast"]["lng"],
-        gmaps_bbox_bounds_json["southwest"]["lng"],
-    ]
+    bounds_lat = [bbox_json[NE][LAT], bbox_json[SW][LAT]]
+    bounds_lng = [bbox_json[NE][LNG], bbox_json[SW][LNG]]
 
-    point_nw = (
-        gmaps_bbox_bounds_json["northeast"]["lat"],
-        gmaps_bbox_bounds_json["southwest"]["lng"],
-    )
-    point_ne = (
-        gmaps_bbox_bounds_json["northeast"]["lat"],
-        gmaps_bbox_bounds_json["northeast"]["lng"],
-    )
-    point_sw = (
-        gmaps_bbox_bounds_json["southwest"]["lat"],
-        gmaps_bbox_bounds_json["southwest"]["lng"],
-    )
+    corner_nw = (bbox_json[NE][LAT], bbox_json[SW][LNG])
+    corner_ne = (bbox_json[NE][LAT], bbox_json[NE][LNG])
+    corner_sw = (bbox_json[SW][LAT], bbox_json[SW][LNG])
 
     distances = {
-        "ne_sw": distance.distance(point_ne, point_sw).meters,
-        "ns": distance.distance(point_nw, point_sw).meters,
-        "ew": distance.distance(point_nw, point_ne).meters,
+        "ne_sw": distance.distance(corner_ne, corner_sw).meters,
+        "ns": distance.distance(corner_nw, corner_sw).meters,
+        "ew": distance.distance(corner_nw, corner_ne).meters,
     }
 
     return {
@@ -232,69 +223,101 @@ def gmaps_geocode_get_boundingbox(gmaps_bbox_bounds_json: dict) -> BoundingBoxDi
     }
 
 
-def get_reverse_geotags_gmaps(latlng: LatLngTuple, levels=5):
-    null = [None, "", " "]
-    gmaps = googlemapsClient(key=GMAPS_TOKEN)
+def clean_formatted_addr_field(
+    formatted_addr: str,
+    plus_code: str = None,
+    country: str = None,
+    country_code: str = None,
+) -> str:
+    if plus_code is not None:
+        formatted_addr = formatted_addr.replace(plus_code, "").strip()
+
+    if (
+        country is not None
+        and country_code is not None
+        and re.search(country, formatted_addr, re.IGNORECASE)
+    ):
+        formatted_addr = re.sub(
+            country,
+            f"{PREPEND_COUNTRY_CODE}{country_code}",
+            formatted_addr,
+            flags=re.IGNORECASE,
+        )
+
+    return formatted_addr
+
+
+def get_reverse_geotags_gmaps(latlng: LatLngTuple, levels: int = 5) -> GeocodeDict:
+    def get_lvl_key(lvl: int) -> str:
+        return f"{LVL_KEY_PREPEND}{lvl}"
+
+    raw_data = GoogleMapsClient(key=GMAPS_TOKEN).reverse_geocode(latlng)
 
     json = [
         x
-        for x in gmaps.reverse_geocode(latlng)
+        for x in raw_data
         if not any(
             [
-                x in null,
+                x in NULL,
                 not isinstance(x, dict),
                 "place_id" not in x,
-                x["place_id"] in null,
+                x["place_id"] in NULL,
                 "address_components" not in x,
-                x["address_components"] in null,
+                x["address_components"] in NULL,
                 not isinstance(x["address_components"], list),
             ]
         )
     ]
 
-    boxes = []
+    geotag_levels = []
     place_ids = []
-
     for res in json:
-        if res["place_id"] in place_ids:
-            continue
-        place_ids.append(res["place_id"])
-
-        if not any(
+        if len(geotag_levels) == levels:
+            break
+        if any(
             [
-                len(boxes) == levels,
+                res["place_id"] in place_ids,
                 "geometry" not in res,
                 not isinstance(res["geometry"], dict),
                 "bounds" not in res["geometry"],
             ]
         ):
+            continue
 
-            if not bool(res["address_components"]):
-                return None
+        place_ids.append(res["place_id"])
 
-            if res["geometry"] and res["geometry"]["bounds"]:
-                box = gmaps_geocode_get_boundingbox(res["geometry"]["bounds"])
+        bbox = gmaps_geocode_get_boundingbox(res["geometry"]["bounds"])
+        addr_dict = gmaps_geocode_get_address_dict(res["address_components"])
 
-            parsed_address = gmaps_geocode_get_address_dict(res["address_components"])
-
-            if "viewport" in res["geometry"] and isinstance(
-                res["geometry"]["viewport"], dict
-            ):
-                viewport = gmaps_geocode_get_viewport(res["geometry"]["viewport"])
-            else:
-                viewport = None
-
-            boxes.append(
-                dict(
-                    **box,
-                    **parsed_address,
-                    viewport=viewport,
-                )
+        if "formatted_address" in res:
+            addr_dict["formatted_address"] = clean_formatted_addr_field(
+                formatted_addr=res["formatted_address"],
+                country=addr_dict["country"] if "country" in addr_dict else None,
+                country_code=addr_dict["country_code"]
+                if "country_code" in addr_dict
+                else None,
+                plus_code=addr_dict["plus_code"] if "plus_code" in addr_dict else None,
             )
 
-    boxes.sort(key=lambda x: x["distances"]["ne_sw"])
+        viewport = None
+        if "viewport" in res["geometry"] and isinstance(
+            res["geometry"]["viewport"], dict
+        ):
+            viewport = gmaps_geocode_get_viewport(res["geometry"]["viewport"])
 
-    return {"level_" + str(i + 1): box for i, box in enumerate(boxes)}
+        geotag_levels.append(
+            {
+                **bbox,
+                **addr_dict,
+                "viewport": viewport,
+            }
+        )
+
+    geotag_levels.sort(key=lambda x: x["distances"]["ne_sw"])
+
+    ret = {get_lvl_key(i + 1): geotag for i, geotag in enumerate(geotag_levels)}
+
+    return ret
 
 
 def parse_geo_str_to_decimal_tuple(string, include_altitude=False):
@@ -305,5 +328,11 @@ def latlng_tuple_to_unicode_string(latlng, include_altitude=False):
     return Point(latlng).format_unicode(altitude=include_altitude)
 
 
-# test = get_reverse_geotags_gmaps((58.507194, 5.798500))
+# latlng = (
+#     58.9767800,
+#     5.7457600,
+# )
+
+# test = get_reverse_geotags_gmaps(latlng=latlng, levels=5)
+
 # print(test)

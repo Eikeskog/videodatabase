@@ -1,4 +1,5 @@
-from typing import Union
+from typeguard import check_type
+from operator import itemgetter
 from django.db.models.expressions import F
 from django.db.models import Q
 from geopy import distance
@@ -6,28 +7,48 @@ from ...models.geotags import GmapsGpsPoint
 from ...models.local import LocalFile
 from ...models.videoitem import Videoitem
 from .geographical import get_boundingboxes_incremental_steps
-from .common import is_all_numeric, is_list_or_tuple, is_numeric, get_parent_dir
+from .common import get_parent_dir
+from ...types.types import NumberOrNumbersList
 
 
 def get_nearby_videoitems(
-    videoitem: Videoitem, meters: Union[list, bool] = None
+    videoitem: Videoitem,
+    meters: NumberOrNumbersList = None,
+    max_per_point: int = 10,
+    max_per_group: int = 10,
+    measure_precise: int = 2,
 ) -> dict:
+    """
+    Searches for Videoitems in close geographical distance
+    to a given Videoitem, through GpsPoint reverse relations.
+
+    Parameters:
+    * meters: stepwise incremented boundingbox sizes,
+    is also used for grouping results.
+    * max_per_location: maximum Videoitems returned from each GpsPoint.
+    * measure_precise: steps with precice measured distances
+    (from steps-beginning).
+    Any step after will have approximated distances. This will be
+    reflected in the returned dictionary.
+    Example: 12.34 versus <15.
+    To speed up performance, cut down on precise measurements.
+    """
+
+    if videoitem is None or videoitem.gmaps_gps_point is None:
+        return None
     if meters is None:
         meters = [120, 280, 550, 1100]
     else:
-        if not is_list_or_tuple(meters):
-            if is_numeric(meters):
-                meters = [
-                    meters,
-                ]
-            else:
-                return None
+        check_type("NumberOrNumbersList", meters, NumberOrNumbersList)
+        meters = sorted(meters)
+        if not isinstance(meters, list):
+            meters = [
+                meters,
+            ]
 
-        if not is_all_numeric(meters):
-            return None
+    ref_point = (videoitem.gps_lat, videoitem.gps_lng)
 
-    nearby_points = {}
-    meters = sorted(meters)
+    nearby_items = {}
 
     boundingboxes = get_boundingboxes_incremental_steps(
         lat=float(videoitem.gps_lat),
@@ -46,94 +67,77 @@ def get_nearby_videoitems(
     )
 
     outer_bounds_qs = GmapsGpsPoint.objects.exclude(outer_bounds_filter)
-
-    for i, meter in enumerate(reversed(meters)):
+    for i, meter in enumerate(meters):
+        precise = i < measure_precise
         key = str(meter)
+        bbox = boundingboxes[key]["boundingbox"]
+        (lat_min, lat_max, lng_min, lng_max) = itemgetter(
+            "lat_min", "lat_max", "lng_min", "lng_max"
+        )(bbox)
+        outer_exclude = (
+            Q(lat__lt=lat_min)
+            | Q(lat__gt=lat_max)
+            | Q(lng__lt=lng_min)
+            | Q(lng__gt=lng_max)
+        )
+        inner_include = (
+            Q(lat__gt=lat_min)
+            & Q(lat__lt=lat_max)
+            & Q(lng__gt=lng_min)
+            & Q(lng__lt=lng_max)
+        )
         if i == 0:
-            prev_key = key
-            qs = outer_bounds_qs
+            qs = GmapsGpsPoint.objects.exclude(outer_exclude).filter(inner_include)
         else:
-            qs = outer_bounds_qs.exclude(
-                Q(lat__lt=boundingboxes[prev_key]["boundingbox"]["lat_min"])
-                | Q(lat__gt=boundingboxes[prev_key]["boundingbox"]["lat_max"])
-                | Q(lng__lt=boundingboxes[prev_key]["boundingbox"]["lng_min"])
-                | Q(lng__gt=boundingboxes[prev_key]["boundingbox"]["lng_max"])
+            prev_key = str(meters[i - 1])
+            prev_bbox = boundingboxes[prev_key]["boundingbox"]
+            (lat_min_prev, lat_max_prev, lng_min_prev, lng_max_prev) = itemgetter(
+                "lat_min", "lat_max", "lng_min", "lng_max"
+            )(prev_bbox)
+            inner_exclude = (
+                Q(lat__gt=lat_min_prev)
+                & Q(lat__lt=lat_max_prev)
+                & Q(lng__gt=lng_min_prev)
+                & Q(lng__lt=lng_max_prev)
+            )
+        if i == len(meters) - 1:
+            qs = outer_bounds_qs.exclude(inner_exclude)
+        elif len(meters) - 1 > i > 0:
+            qs = (
+                GmapsGpsPoint.objects.exclude(outer_exclude)
+                .exclude(inner_exclude)
+                .filter(inner_include)
             )
 
-        if i < len(meters) - 1:
-            inner_bounds_exclude = (
-                Q(lat__gt=boundingboxes[key]["exclude_inner"]["lat_min"])
-                & Q(lat__lt=boundingboxes[key]["exclude_inner"]["lat_max"])
-                & Q(lng__gt=boundingboxes[key]["exclude_inner"]["lng_min"])
-                & Q(lng__lt=boundingboxes[key]["exclude_inner"]["lng_max"])
+        distances = []
+        for gps_point in qs[:max_per_group]:
+            point = (gps_point.lat, gps_point.lng)
+            videoitems = gps_point.videoitems.all().values_list(
+                "pk", "static_thumbnail_count"
+            )[:max_per_point]
+            distance_from_ref = (
+                int(distance.distance(ref_point, point).meters)
+                if precise
+                else f"<{key}"
             )
-
-            qs = qs.exclude(inner_bounds_exclude)
-
-        if i > 0:
-            inner_bounds_include = (
-                Q(lat__gt=boundingboxes[key]["boundingbox"]["lat_min"])
-                & Q(lat__lt=boundingboxes[key]["boundingbox"]["lat_max"])
-                & Q(lng__gt=boundingboxes[key]["boundingbox"]["lng_min"])
-                & Q(lng__lt=boundingboxes[key]["boundingbox"]["lng_max"])
+            distances.append(
+                {
+                    "gps_point_id": gps_point.id,
+                    "lat": gps_point.lat,
+                    "lng": gps_point.lng,
+                    "distance": distance_from_ref,
+                    "videoitems": videoitems,
+                }
             )
-            qs = qs.filter(inner_bounds_include)
+        if precise:
+            distances = sorted(distances, key=lambda x: x["distance"])
 
-        if key in [str(x) for x in meters[:2]]:
-            distances = []
+        nearby_items[key] = distances
 
-            for gps_point_obj in qs:
-                point1 = (
-                    videoitem.gps_lat,
-                    videoitem.gps_lng,
-                )
-                point2 = (
-                    gps_point_obj.lat,
-                    gps_point_obj.lng,
-                )
-                points_distance = distance.distance(point1, point2)
-                distances.append(
-                    {
-                        "gps_point_id": gps_point_obj.id,
-                        "lat": gps_point_obj.lat,
-                        "lng": gps_point_obj.lng,
-                        "distance": points_distance.meters,
-                        "videoitems": [
-                            obj.pk
-                            for obj in Videoitem.objects.exclude(
-                                gmaps_gps_point__isnull=True
-                            ).filter(gmaps_gps_point_id=gps_point_obj.id)
-                        ][:20],
-                    }
-                )
-
-            nearby_points[key] = distances
-
-        else:
-            distances = []
-            for gps_point_obj in qs:
-                distances.append(
-                    {
-                        "gps_point_id": gps_point_obj.id,
-                        "lat": gps_point_obj.lat,
-                        "lng": gps_point_obj.lng,
-                        "distance": f"< {key}",
-                        "videoitems": [
-                            obj.pk
-                            for obj in Videoitem.objects.exclude(
-                                gmaps_gps_point__isnull=True
-                            ).filter(gmaps_gps_point_id=gps_point_obj.id)
-                        ][:20],
-                    }
-                )
-            nearby_points[key] = distances
-
-        prev_key = key
-
-    return nearby_points
+    return nearby_items
 
 
-# gammel funksjon, har nå en directory modell som heller kan brukes
+# scrap
 def get_geotag_suggestions_from_local_dir(directory) -> list:
     qs = (
         LocalFile.objects.filter(directory_id__path__istartswith=directory)
@@ -163,6 +167,7 @@ def get_geotag_suggestions_from_local_dir(directory) -> list:
     return None
 
 
+# scrap
 def get_geotag_suggestions_from_local_dirs_recursive(directories):
     if isinstance(directories, str):
         directories = [

@@ -3,7 +3,20 @@ from typing import Literal, TypedDict, Optional, Union
 from numbers import Real
 
 
-LatLngTuple = tuple[Real]
+class AddressDict(TypedDict, total=False):
+    plus_code: Optional[str]
+    locality: Optional[str]
+    postal_town: Optional[Union[str, int]]
+    postal_code: Optional[str]
+    municipality: Optional[str]
+    county: Optional[str]
+    country: Optional[str]
+    country_code: Optional[str]
+
+    displayname_full: str
+    displayname_short: str
+
+    formatted_address: Optional[str]
 
 
 class BoundingBoxDict(TypedDict):
@@ -21,17 +34,37 @@ class InclusionExclusionBoundingBoxDict(TypedDict, total=False):
 IncrementalBoundingBoxesDict = dict[str, InclusionExclusionBoundingBoxDict]
 
 
-class AddressDict(TypedDict, total=False):
-    country_code: Optional[str]
-    county: Optional[str]
+class BoundingBoxDistancesDict(TypedDict):
+    ne_sw: Real
+    ns: Real
+    ew: Real
+
+
+class GeocodeDict(TypedDict):  # Inherit AddressDict?
+    lat_min: Real
+    lat_max: Real
+    lng_min: Real
+    lng_max: Real
+
+    distances: BoundingBoxDistancesDict
+    viewport: BoundingBoxDict
+
+    plus_code: Optional[str]
     locality: Optional[str]
+    postal_town: Optional[Union[str, int]]
+    postal_code: Optional[str]
     municipality: Optional[str]
-    postal_town: Optional[str]
-    postal_code: Optional[Union[str, int]]
+    county: Optional[str]
     country: Optional[str]
+    country_code: Optional[str]
+
+    displayname_full: str
+    displayname_short: str
+
     formatted_address: Optional[str]
-    displayname_full: Optional[str]
-    displayname_short: Optional[str]
+
+
+MultiLevelGeocodeDict = dict[str, GeocodeDict]
 
 
 class FieldValueNamedDict(TypedDict):
@@ -44,6 +77,8 @@ class AddressParentFieldsComparisonDict(TypedDict):
     obj_max_first_unique_parent: FieldValueNamedDict
 
 
+LatLngTuple = tuple[Real, Real]
+
 IdValueDict = dict[Union[str, int], Union[str, int]]
 
 AddressFieldName = Literal[
@@ -55,6 +90,7 @@ AddressFieldName = Literal[
     "postal_town",
     "postal_code",
     "country",
+    "plus_code",
 ]
 
 AddressFieldNameCombination = Literal[
@@ -71,3 +107,5 @@ AddressFieldNameCombination = Literal[
 AddressFieldValueDict = dict[AddressFieldName, Union[str, int]]
 
 AddressNameGroupingsDict = dict[AddressFieldNameCombination, AddressFieldValueDict]
+
+NumberOrNumbersList = Union[list[Real], Real]
