@@ -12,14 +12,14 @@ class Videoitem(models.Model):
     videoitem_id = models.CharField(max_length=16, primary_key=True)
     static_thumbnail_count = models.IntegerField(null=True, blank=True)
 
-    exif_camera = models.CharField(max_length=120, null=True, blank=True)
-    exif_dimensions = models.CharField(max_length=120, null=True, blank=True)
-    exif_duration_hhmmss = models.CharField(max_length=120, null=True, blank=True)
+    exif_camera = models.CharField(max_length=120, default="", blank=True)
+    exif_dimensions = models.CharField(max_length=120, default="", blank=True)
+    exif_duration_hhmmss = models.CharField(max_length=120, default="", blank=True)
     exif_duration_sec = models.IntegerField(null=True, blank=True)
     exif_fps = models.DecimalField(
         max_digits=7, decimal_places=3, null=True, blank=True
     )
-    exif_resolution = models.CharField(max_length=120, null=True, blank=True)
+    exif_resolution = models.CharField(max_length=120, default="", blank=True)
     exif_last_modified = models.DateTimeField(null=True, blank=True)
 
     gps_lat = models.DecimalField(
@@ -28,6 +28,7 @@ class Videoitem(models.Model):
     gps_lng = models.DecimalField(
         max_digits=11, decimal_places=7, null=True, blank=True
     )
+
     gmaps_gps_point = models.ForeignKey(
         to=GmapsGpsPoint,
         related_name="videoitems",
@@ -38,6 +39,9 @@ class Videoitem(models.Model):
 
     users = models.ManyToManyField(to="core_user.User")
     lists = models.ManyToManyField(to="VideoitemsList")
+
+    def __str__(self) -> str:
+        return self.videoitem_id
 
     def get_tags(self) -> dict:
         return (
@@ -52,6 +56,7 @@ class Videoitem(models.Model):
             )
         )
 
+    # wip
     def get_gps_suggestions_local_dir(self) -> dict:
         data = (
             LocalFile.objects.filter(
@@ -68,7 +73,7 @@ class Videoitem(models.Model):
                 displayname_id=F(
                     "videoitem_id__"
                     "gmaps_gps_point_id__"
-                    "geotag_level_1_id__"
+                    "geotag_lvl_1_id__"
                     "unique_displayname_object"
                 ),
             )
@@ -107,6 +112,3 @@ class Videoitem(models.Model):
     def remove_from_lists(self, user, videoitems_lists) -> None:
         print("remove from user:", user)
         print("videoitems_lists:", videoitems_lists)
-
-    def __str__(self) -> str:
-        return self.videoitem_id

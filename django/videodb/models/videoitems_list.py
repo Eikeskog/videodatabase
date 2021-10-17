@@ -9,13 +9,17 @@ class VideoitemsList(models.Model):
         ordering = ["label"]
 
     label = models.CharField(max_length=120)
-    user_id = models.CharField(max_length=120, null=True, blank=True)
+    user_id = models.CharField(max_length=120, default="", blank=True)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField()
 
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(default="", blank=True)
     created_by = models.ForeignKey(
-        to="core_user.User", on_delete=models.SET_NULL, null=True, blank=True
+        to="core_user.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="videoitemslist_set",
     )
 
     videoitems = models.ManyToManyField(to=Videoitem)

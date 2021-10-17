@@ -11,7 +11,11 @@ class Keyword(models.Model):
 
     keyword = models.CharField(max_length=120)
     videoitem = models.ForeignKey(
-        to="Videoitem", blank=True, null=True, on_delete=models.CASCADE
+        to="Videoitem",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="keyword_set",
     )
     unique_keyword = models.ForeignKey(
         to="UniqueKeyword",

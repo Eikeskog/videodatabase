@@ -19,9 +19,8 @@ const DateRangePicker = () => {
 
   const { addSearchfilter } = useSearchfilters();
 
-  const chipLabel = () => dateRangeToString(state[0].startDate, state[0].endDate);
-
-  const searchParameter = () => dateRangeToSearchParameter(state[0].startDate, state[0].endDate);
+  const chipLabel = dateRangeToString(state[0].startDate, state[0].endDate);
+  const searchParameter = dateRangeToSearchParameter(state[0].startDate, state[0].endDate);
 
   return (
     <>
@@ -42,6 +41,7 @@ const DateRangePicker = () => {
         >
           { state[0].endDate !== null && (
           <>
+
             <SingleChip>
               {chipLabel}
             </SingleChip>

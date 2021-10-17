@@ -1,11 +1,3 @@
-from .geotags import (
-    GeotagLevel1,
-    GeotagLevel2,
-    GeotagLevel3,
-    GeotagLevel4,
-    GeotagLevel5,
-    ScheduledReverseGeotag,
-)
 from .issue import VideoitemIssue
 from .keyword import Keyword
 from .local import (
@@ -26,3 +18,5 @@ from .unique_searchfilter import (
 )
 from .videoitem import Videoitem
 from .videoitems_list import VideoitemsList
+
+# from .geospatial import Zipcode

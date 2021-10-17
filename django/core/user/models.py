@@ -47,12 +47,12 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(db_index=True, max_length=255, unique=True)
-    email = models.EmailField(db_index=True, unique=True, null=True, blank=True)
+    email = models.EmailField(db_index=True, unique=True, default="", blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    created = models.CharField(max_length=255, null=True, blank=True)
-    updated = models.CharField(max_length=255, null=True, blank=True)
+    created = models.CharField(max_length=255, default="", blank=True)
+    updated = models.CharField(max_length=255, default="", blank=True)
 
     videoitems = models.ManyToManyField(to=Videoitem)
     videoitems_lists = models.ManyToManyField(to=VideoitemsList)
@@ -62,6 +62,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    def __str__(self) -> str:
+        return f"{self.email}"
+
+    # def get_videoitems_lists(self) -> QuerySet:
+    #     return self.videoitems_lists
+
     def say_hello(self) -> str:
         return "hello from " + self.username
 
@@ -70,9 +76,3 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def delete_videoitems_list(self) -> None:
         print("delete list, self", self)
-
-    # def get_videoitems_lists(self) -> QuerySet:
-    #     return self.videoitems_lists
-
-    def __str__(self) -> str:
-        return f"{self.email}"

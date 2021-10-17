@@ -14,21 +14,21 @@ const App = () => {
   const { modalContent, getModal } = useDynamicModal();
   const { useAuth: { isLoggedIn, logIn } } = useUserContext();
 
-  if (!isLoggedIn) {
-    return <LoginForm logIn={logIn} />;
-  }
-
   return (
-    <SearchfiltersContext>
-      <div className={`${palette} ${styles.app}`}>
-        <AppBar />
+    !isLoggedIn
+      ? <LoginForm logIn={logIn} />
+      : (
+        <SearchfiltersContext>
+          <div className={`${palette} ${styles.app}`}>
+            <AppBar />
 
-        { modalContent
-          && modalContent }
+            { modalContent
+              && modalContent }
 
-        <ThumbnailBrowser toggleModal={getModal} />
-      </div>
-    </SearchfiltersContext>
+            <ThumbnailBrowser toggleModal={getModal} />
+          </div>
+        </SearchfiltersContext>
+      )
   );
 };
 

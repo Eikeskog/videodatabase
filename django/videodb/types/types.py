@@ -1,19 +1,70 @@
+from decimal import Decimal
 from typing import Literal, TypedDict, Optional, Union
-from ..models.geotags import (
-    GeotagLevel1,
-    GeotagLevel2,
-    GeotagLevel3,
-    GeotagLevel4,
-    GeotagLevel5,
-)
+from numbers import Real
 
 
 class AddressDict(TypedDict, total=False):
-    country_code: Optional[str]
-    county: Optional[str]
+    plus_code: Optional[str]
     locality: Optional[str]
+    postal_town: Optional[Union[str, int]]
+    postal_code: Optional[str]
     municipality: Optional[str]
-    postal_town: Optional[str]
+    county: Optional[str]
+    country: Optional[str]
+    country_code: Optional[str]
+
+    displayname_full: str
+    displayname_short: str
+
+    formatted_address: Optional[str]
+
+
+class BoundingBoxDict(TypedDict):
+    lat_min: Decimal
+    lat_max: Decimal
+    lng_min: Decimal
+    lng_max: Decimal
+
+
+class InclusionExclusionBoundingBoxDict(TypedDict, total=False):
+    boundingbox: BoundingBoxDict
+    exclude_outer: BoundingBoxDict
+
+
+IncrementalBoundingBoxesDict = dict[str, InclusionExclusionBoundingBoxDict]
+
+
+class BoundingBoxDistancesDict(TypedDict):
+    ne_sw: Real
+    ns: Real
+    ew: Real
+
+
+class GeocodeDict(TypedDict):  # Inherit AddressDict?
+    lat_min: Real
+    lat_max: Real
+    lng_min: Real
+    lng_max: Real
+
+    distances: BoundingBoxDistancesDict
+    viewport: BoundingBoxDict
+
+    plus_code: Optional[str]
+    locality: Optional[str]
+    postal_town: Optional[Union[str, int]]
+    postal_code: Optional[str]
+    municipality: Optional[str]
+    county: Optional[str]
+    country: Optional[str]
+    country_code: Optional[str]
+
+    displayname_full: str
+    displayname_short: str
+
+    formatted_address: Optional[str]
+
+
+MultiLevelGeocodeDict = dict[str, GeocodeDict]
 
 
 class FieldValueNamedDict(TypedDict):
@@ -26,10 +77,20 @@ class AddressParentFieldsComparisonDict(TypedDict):
     obj_max_first_unique_parent: FieldValueNamedDict
 
 
+LatLngTuple = tuple[Real, Real]
+
 IdValueDict = dict[Union[str, int], Union[str, int]]
 
 AddressFieldName = Literal[
-    "country_code", "county", "locality", "postal_town", "municipality"
+    "country_code",
+    "county",
+    "locality",
+    "postal_town",
+    "municipality",
+    "postal_town",
+    "postal_code",
+    "country",
+    "plus_code",
 ]
 
 AddressFieldNameCombination = Literal[
@@ -43,8 +104,8 @@ AddressFieldNameCombination = Literal[
     "country_code",
 ]
 
-AnyGeotag = Union[GeotagLevel1, GeotagLevel2, GeotagLevel3, GeotagLevel4, GeotagLevel5]
-
 AddressFieldValueDict = dict[AddressFieldName, Union[str, int]]
 
 AddressNameGroupingsDict = dict[AddressFieldNameCombination, AddressFieldValueDict]
+
+NumberOrNumbersList = Union[list[Real], Real]
