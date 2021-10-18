@@ -245,7 +245,7 @@ class Geotag(models.Model):
                 setattr(self, key, value)
             else:
                 other_fields[key] = value
-        if len(other_fields.keys()):
+        if other_fields.keys():
             self.other_fields = json.dumps(other_fields)
         self.save()
 

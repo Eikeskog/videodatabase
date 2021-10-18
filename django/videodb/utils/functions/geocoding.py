@@ -109,12 +109,11 @@ def gmaps_geocode_get_address_dict(
         component_type = get_component_type(component_json)
         if component_type in COMPONENT_TYPE_TRANSLL:
             return COMPONENT_TYPE_TRANSLL[component_type]
-        else:
-            return component_type
+        return component_type
 
     def get_component_value(component_json: dict) -> str:
         return clean_str(
-            max(set([component_json["short_name"], component_json["long_name"]]))
+            max({component_json["short_name"], component_json["long_name"]})
         )
 
     def add_missing_dict_keys(addr_dict: AddressDict) -> AddressDict:
@@ -143,8 +142,10 @@ def gmaps_geocode_get_address_dict(
 
 
 def get_displayname_full(
-    address_dict: AddressDict, exclude=DISPLAYNAME_EXCLUDE
+    address_dict: AddressDict, exclude=None
 ) -> Optional[str]:
+    if exclude is None:
+        exclude = DISPLAYNAME_EXCLUDE
     positions = [
         column
         for column, value in address_dict.items()

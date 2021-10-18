@@ -81,8 +81,7 @@ def get_boundingboxes_incremental_steps(
                 bbox: BoundingBoxDict = get_bounding_box(lat, lng, km)
                 key = str(steps_m)
                 return {key: {"boundingbox": bbox}}
-            else:
-                return None
+            return None
 
         if not is_all_numeric(steps_m):
             return None

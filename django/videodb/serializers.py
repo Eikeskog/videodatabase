@@ -262,9 +262,6 @@ class VideoitemsSerializer(serializers.ModelSerializer):
         model = Videoitem
         fields = "__all__"
 
-    def validate(self, data):
-        return super().validate(data)
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["location_displayname_short"] = instance.get_displayname_short()

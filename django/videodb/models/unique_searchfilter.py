@@ -292,11 +292,13 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
                 ):
                     return True
                 return False
-            if address_dict_min[field_name] != address_dict_max[field_name]:
-                if cls._address_field_difference(
-                    address_dict_min, address_dict_max, field_name
-                ):
-                    return True
+            if (
+                address_dict_min[field_name] != address_dict_max[field_name]
+                and cls._address_field_difference(
+                address_dict_min, address_dict_max, field_name
+            )
+            ):
+                return True
         return False
 
     @classmethod
