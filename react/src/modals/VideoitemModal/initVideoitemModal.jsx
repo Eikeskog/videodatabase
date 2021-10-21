@@ -14,12 +14,7 @@ const initVideoitemModal = (
     tags,
   } = data;
 
-  /*
-    logic for displaying modal content based on API response.
-    (e.g. displaying components for geotag suggestions, if item is missing gps point.)
-  */
-
-  if (!gpsPoint || !gpsPoint?.geotag_level_1) return <span>not implemented</span>;
+  if (!gpsPoint || !gpsPoint?.geotag_lvl_1) return <span>not implemented</span>;
 
   return (
     <VideoitemModal

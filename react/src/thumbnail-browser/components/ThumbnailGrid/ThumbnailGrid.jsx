@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  useEffect, useState, useCallback,
+} from 'react';
 import { Grid } from '@material-ui/core';
 import PropTypes from 'prop-types';
 import renderCards from './utils';
@@ -43,14 +45,16 @@ const ThumbnailGrid = ({
   const [data, setData] = useState([]);
   const { restApiParams } = useSearchfilters();
 
-  const { useAuthorizedFetch: { authorizedFetch, isFetching } } = useUserContext();
+  const {
+    useAuthorizedFetch: { authorizedFetch, isFetching },
+  } = useUserContext();
 
-  const handleResponse = (response) => {
+  const handleResponse = useCallback((response) => {
     setItemsCount(parseInt(response?.count, 10));
-    setData(() => response);
-  };
+    setData(() => renderCards(response?.results, toggleModal));
+  }, []);
 
-  const handleError = (error) => console.log(error);
+  const handleError = useCallback((error) => { console.log(error); }, []);
 
   useEffect(() => {
     fetchData({
@@ -82,9 +86,10 @@ const ThumbnailGrid = ({
         spacing={2}
         className={`${styles.grid}`}
       >
+
         {isFetching === baseUrl
-          ? <p>LOADING</p>
-          : renderCards(data?.results, toggleModal)}
+          ? <p>loading...</p>
+          : data}
 
       </Grid>
     </div>
@@ -104,7 +109,7 @@ ThumbnailGrid.propTypes = {
 };
 
 ThumbnailGrid.defaultProps = {
-  toggleModal: () => null,
+  toggleModal: null,
   setCurrentPage: null,
   viewPerPage: 0,
   currentPage: 0,

@@ -1,10 +1,8 @@
 import React from 'react';
 import TablePagination from '@material-ui/core/TablePagination';
 import PropTypes from 'prop-types';
-
-const defaultLabelDisplayedRows = ({
-  from, to, count,
-}) => `${from}-${to} av ${count !== -1 ? count : `mer enn ${to}`}`;
+import styles from './Pagination.module.css';
+import { defaultLabelDisplayedRows, defaultLabelRowsPerPage, defaultRowsPerPageOptions } from './utils';
 
 const Pagination = ({
   setViewPerPage,
@@ -17,30 +15,21 @@ const Pagination = ({
     handlePageChange(parseInt(newPage, 10) + 1);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const onChangeRowsPerPage = (event) => {
     setViewPerPage(parseInt(event.target.value, 10));
   };
 
-  const defaultRowsPerPageOptions = [8, 20, 50, 100, 250];
-
   return (
     <TablePagination
-      style={{
-        position: 'fixed',
-        bottom: '0',
-        marginLeft: 'auto',
-        width: '100%',
-        backgroundColor: 'black',
-        color: 'yellow',
-        zIndex: 100,
-      }}
+      className={styles.pagination}
+      style={{ zIndex: 100 }}
       component="div"
       count={itemsCount}
-      page={(currentPage - 1)}
+      page={currentPage - 1}
       onPageChange={onPageChange}
       rowsPerPage={viewPerPage}
-      onRowsPerPageChange={handleChangeRowsPerPage}
-      labelRowsPerPage="Antall per side"
+      onRowsPerPageChange={onChangeRowsPerPage}
+      labelRowsPerPage={defaultLabelRowsPerPage}
       labelDisplayedRows={defaultLabelDisplayedRows}
       rowsPerPageOptions={defaultRowsPerPageOptions}
     />

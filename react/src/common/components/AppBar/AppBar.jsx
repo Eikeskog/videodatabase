@@ -11,7 +11,7 @@ import { useUserContext } from '../../contexts/UserContext/UserContext';
 
 import styles from './AppBar.module.css';
 
-// in early development
+// demo / early development
 const AppBar = (/* {mode} */) => {
   const { activeSearchfilters, removeSearchfilter } = useSearchfilters();
   const { useAuth: { user, logOut } } = useUserContext();

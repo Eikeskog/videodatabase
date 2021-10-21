@@ -3,15 +3,6 @@
   padding: 20px;
   padding-bottom: 12px;
   width: 100%;
-
-}
-
-.rdrDateDisplayWrapper{
-
-}
-
-.rdrDateDisplayItem{
-
 }
 
 .rdrDateDisplayItem input{
@@ -23,10 +14,6 @@
     width: 100%;
     background: transparent;
   }
-
-.rdrDateDisplayItemActive{
-
-}
 
 .rdrMonthPicker select {
   border-radius: 10px;

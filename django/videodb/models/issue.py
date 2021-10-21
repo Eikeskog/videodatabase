@@ -1,9 +1,10 @@
 from django.db import models
 import uuid
 
+
 class VideoitemIssue(models.Model):
     class Meta:
-        db_table = 'videoitem_issue'
+        db_table = "videoitem_issue"
 
     issue_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
@@ -16,7 +17,7 @@ class VideoitemIssue(models.Model):
     located_fullpath = models.CharField(max_length=255, null=True, blank=True)
     located_datetime = models.DateTimeField(null=True, blank=True)
 
-    videoitem = models.OneToOneField(to='Videoitem', on_delete=models.CASCADE)
+    videoitem = models.OneToOneField(to="Videoitem", on_delete=models.CASCADE)
 
     file_size = models.BigIntegerField(null=True, blank=True)
     file_last_modified = models.DateTimeField(null=True, blank=True)

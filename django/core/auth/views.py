@@ -12,7 +12,7 @@ from .serializers import LoginSerializer, RegistrationSerializer
 class LoginViewSet(ModelViewSet, TokenObtainPairView):
     serializer_class = LoginSerializer
     permission_classes = (AllowAny,)
-    http_method_names = ['post']
+    http_method_names = ["post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -28,17 +28,20 @@ class LoginViewSet(ModelViewSet, TokenObtainPairView):
 class RegistrationViewSet(ModelViewSet, TokenObtainPairView):
     serializer_class = RegistrationSerializer
     permission_classes = (AllowAny,)
-    http_method_names = ['post']
+    http_method_names = ["post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         # except:
-        #     if User.objects.filter(username=request.data['username']).exists():
-        #         return Response({'error': 'USERNAME_EXIST'}, status=status.HTTP_409_CONFLICT)
+        #     if User.objects.filter(
+        #         username=request.data['username']).exists():
+        #         return Response({'error': 'USERNAME_EXIST'},
+        # status=status.HTTP_409_CONFLICT)
         #     if User.objects.filter(email=request.data['email']).exists():
-        #         return Response({'error': 'EMAIL_EXIST'}, status=status.HTTP_409_CONFLICT)
+        #         return Response({'error': 'EMAIL_EXIST'},
+        # status=status.HTTP_409_CONFLICT)
         #     return Response({'error': 'Test'})
 
         user = serializer.save()
@@ -49,16 +52,19 @@ class RegistrationViewSet(ModelViewSet, TokenObtainPairView):
             "access": str(refresh.access_token),
         }
 
-        return Response({
-            "user": serializer.data,
-            "refresh": res["refresh"],
-            "token": res["access"]
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "user": serializer.data,
+                "refresh": res["refresh"],
+                "token": res["access"],
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class RefreshViewSet(ViewSet, TokenRefreshView):
     permission_classes = (AllowAny,)
-    http_method_names = ['post']
+    http_method_names = ["post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

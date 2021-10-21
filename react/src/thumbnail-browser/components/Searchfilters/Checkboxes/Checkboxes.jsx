@@ -1,6 +1,7 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import { useSearchfilters } from '../../../contexts/SearchfiltersContext';
-import { renderCheckboxList } from './util';
+import { renderCheckboxList } from './utils';
 
 const Checkboxes = ({
   filterType,
@@ -29,4 +30,6 @@ Checkboxes.defaultProps = {
   initialValues: {},
 };
 
-export default Checkboxes;
+const MemoizedCheckboxes = React.memo(Checkboxes);
+
+export default MemoizedCheckboxes;

@@ -3,16 +3,16 @@ import PropTypes from 'prop-types';
 import ThumbnailGrid from './components/ThumbnailGrid/ThumbnailGrid';
 import Pagination from './components/Pagination/Pagination';
 
-const getPageCount = (itemsCount, viewPerPage) => {
-  Math.floor((itemsCount + viewPerPage - 1) / viewPerPage);
-};
+const getPageCount = (itemsCount, viewPerPage) => (
+  Math.floor((itemsCount + viewPerPage - 1) / viewPerPage)
+);
 
 const ThumbnailBrowser = ({ toggleModal }) => {
-  const [state, setState] = useState(() => ({
+  const [state, setState] = useState({
     currentPage: 1,
     viewPerPage: 20,
     itemsCount: 0,
-  }));
+  });
 
   const handlePageChange = (pageNumber) => setState(
     (prevState) => ({
@@ -44,6 +44,7 @@ const ThumbnailBrowser = ({ toggleModal }) => {
 
   return (
     <>
+
       <ThumbnailGrid
         currentPage={state.currentPage}
         viewPerPage={state.viewPerPage}

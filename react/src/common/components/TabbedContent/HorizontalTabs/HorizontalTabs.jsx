@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { AnimatePresence, motion } from 'framer-motion';
 import styled from 'styled-components';
@@ -6,10 +6,10 @@ import { headerLeftOffset, headerStyle } from './util';
 
 import styles from './HorizontalTabs.module.css';
 
-const AccentLine = styled(motion.hr)`
+const AnimatedLine = styled(motion.div)`
   height: 4px;
   position: absolute;
-  top: 44px;
+  top: 30px;
   border: 0;
   margin: 0;
   padding: 0;
@@ -23,19 +23,19 @@ const variants = {
   exit: { opacity: 0 },
 };
 
-const ActiveComponent = ({ tabsDict, activeTab, style }) => (
+const ActiveComponent = ({ style, children }) => (
   <AnimatePresence>
     <motion.div
+      variants={variants}
       initial="initial"
       animate="isOpen"
       exit="exit"
-      variants={variants}
       className={`${styles.content}`}
       transition="easeIn"
       style={style}
     >
 
-      {tabsDict[activeTab]?.component}
+      {children}
 
     </motion.div>
   </AnimatePresence>
@@ -43,19 +43,12 @@ const ActiveComponent = ({ tabsDict, activeTab, style }) => (
 );
 
 ActiveComponent.propTypes = {
-  tabsDict: PropTypes.objectOf(
-    PropTypes.shape({
-      header: PropTypes.string,
-      component: PropTypes.node,
-    }),
-  ),
-  activeTab: PropTypes.string,
+  children: PropTypes.node,
   style: PropTypes.objectOf(PropTypes.string),
 };
 
 ActiveComponent.defaultProps = {
-  tabsDict: {},
-  activeTab: null,
+  children: null,
   style: {},
 };
 
@@ -67,23 +60,17 @@ const TabHeader = ({
   tabsCount,
   headerWidth,
 }) => {
-  const style = headerStyle({ tabsCount, index, headerWidth });
+  const style = useMemo(() => headerStyle({ tabsCount, index, headerWidth }), []);
 
   return (
-    <>
-      <input
-        aria-label={id}
-        type="radio"
-        style={style}
-        onClick={onClick}
-        readOnly
-      />
-
-      <span style={style}>
-        {label}
-      </span>
-
-    </>
+    <span
+      style={style}
+      role="presentation"
+      onClick={onClick}
+      aria-label={id}
+    >
+      {label}
+    </span>
   );
 };
 
@@ -109,34 +96,38 @@ const HorizontalTabs = ({
   tabsDict,
   initialActiveTab,
 }) => {
-  const [activeTab, setActiveTab] = useState(initialActiveTab || Object.keys(tabsDict)[0]);
+  const [activeTab, setActiveTab] = useState(() => initialActiveTab ?? Object.keys(tabsDict)[0]);
   const [linePosition, setLinePosition] = useState('0');
 
   const tabsCount = Object.keys(tabsDict).length;
-  const headerWidth = `${Math.floor((100 / tabsCount)).toString()}%`;
+  const headerWidth = useMemo(() => `${Math.floor((100 / tabsCount)).toString()}%`, []);
 
   const onTabClick = (index, key) => {
     setLinePosition(() => headerLeftOffset({ tabsCount, index }));
     setActiveTab(key);
   };
 
+  const tabHeaders = useMemo(() => Object.keys(tabsDict).map(
+    (key, index) => (
+      <TabHeader
+        key={key}
+        id={key}
+        index={index}
+        label={tabsDict[key]?.header}
+        onClick={() => onTabClick(index, key)}
+        headerWidth={headerWidth}
+        tabsCount={tabsCount}
+      />
+    ),
+  ), []);
+
   return (
     <div className={`${styles.container}`}>
       <div className={`${styles.tabs}`}>
 
-        { Object.keys(tabsDict).map((key, index) => (
-          <TabHeader
-            key={key}
-            id={key}
-            index={index}
-            label={tabsDict[key]?.header}
-            onClick={() => onTabClick(index, key)}
-            headerWidth={headerWidth}
-            tabsCount={tabsCount}
-          />
-        ))}
+        {tabHeaders}
 
-        <AccentLine
+        <AnimatedLine
           className={`${styles.line}`}
           left={linePosition}
           width={headerWidth}
@@ -148,14 +139,9 @@ const HorizontalTabs = ({
 
       </div>
 
-      <ActiveComponent tabsDict={tabsDict} activeTab={activeTab} />
-
-      {/* <ActiveComponent tabsDict={tabsDict} activeTab={activeTab} /> */}
-      {/* <div className={`${styles.content}`}> */}
-      {/* <AnimatePresence>
-          {tabsDict[activeTab]?.component}
-        </AnimatePresence> */}
-      {/* </div> */}
+      <ActiveComponent>
+        {tabsDict[activeTab]?.component}
+      </ActiveComponent>
 
     </div>
   );

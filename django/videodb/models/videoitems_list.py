@@ -2,21 +2,31 @@ from django.db import models
 from django.utils import timezone
 from .videoitem import Videoitem
 
+
 class VideoitemsList(models.Model):
     class Meta:
-        db_table = 'user_list'
-        ordering = ['label']
+        db_table = "user_list"
+        ordering = ["label"]
 
     label = models.CharField(max_length=120)
-    user_id = models.CharField(max_length=120, null=True, blank=True) # not implemented.
+    user_id = models.CharField(max_length=120, default="", blank=True)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField()
+
+    description = models.TextField(default="", blank=True)
+    created_by = models.ForeignKey(
+        to="core_user.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="videoitemslist_set",
+    )
 
     videoitems = models.ManyToManyField(to=Videoitem)
     items_count = models.IntegerField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        ''' On save, update timestamps '''
+        """On save, update timestamps"""
         if not self.id:
             self.created = timezone.now()
         self.modified = timezone.now()

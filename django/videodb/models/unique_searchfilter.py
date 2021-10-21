@@ -1,57 +1,106 @@
 import json
+from typing import Optional, Type, TypeVar, Union  # , TypedDict
 from django.db import models
+from django.db.models.base import Model
+from ..types.enums import StatusMessage
 from .geotags import (
-  GeotagLevel1,
-  GeotagLevel2,
-  GeotagLevel3,
-  GeotagLevel4,
-  GeotagLevel5
+    GeotagLvl1,
+    GeotagLvl2,
+    GeotagLvl3,
+    GeotagLvl4,
+    GeotagLvl5,
+)
+from ..types.types import (
+    AddressDict,
+    AddressFieldName,
+    AddressFieldNameCombination,
+    AddressFieldValueDict,
+    AddressNameGroupingsDict,
+    AddressParentFieldsComparisonDict,
+    FieldValueNamedDict,
+    IdValueDict,
 )
 
-# early development
+# Address fields sorted from least to most specific.
+SORTED_ADDR_FIELDS = [
+    "locality",
+    "postal_town",
+    "municipality",
+    "county",
+    "country_code",
+]
+
+
+ADDR_FIELDS_CHILD_PARENT = {
+    "locality": ["postal_town", "municipality", "county"],
+    "postal_town": "municipality",
+    "municipality": "county",
+    "county": "country_code",
+    "country_code": None,
+}
+
+GEOTAGS_CLS = [
+    GeotagLvl1,
+    GeotagLvl2,
+    GeotagLvl3,
+    GeotagLvl4,
+    GeotagLvl5,
+]
+
+T = TypeVar("T", bound=Model)
+
+
+# in early development
 class UniqueSearchfilter(models.Model):
     pass
 
+
 class UniqueCamera(UniqueSearchfilter):
     class Meta:
-        db_table = 'unique_camera'
-        ordering = ['camera']
+        db_table = "unique_camera"
+        ordering = ["camera"]
 
-    camera = models.CharField(max_length=120, unique=True, null=True, blank=True)
-    camera_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
- 
-    def __str__(self):
+    camera = models.CharField(max_length=120, unique=True, default="", blank=True)
+    camera_unique_searchfilter = models.OneToOneField(
+        UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
+    )
+
+    def __str__(self) -> str:
         return str(self.camera)
 
 
 class UniqueFps(UniqueSearchfilter):
     class Meta:
-        db_table = 'unique_fps'
-        ordering = ['fps']
+        db_table = "unique_fps"
+        ordering = ["fps"]
 
     fps = models.IntegerField(unique=True, null=True, blank=True)
-    fps_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
+    fps_unique_searchfilter = models.OneToOneField(
+        UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
+    )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.fps)
 
 
 class UniqueKeyword(UniqueSearchfilter):
     class Meta:
-        db_table = 'unique_keyword'
-        ordering = ['keyword']
+        db_table = "unique_keyword"
+        ordering = ["keyword"]
 
-    keyword = models.CharField(max_length=120, unique=True, null=True, blank=True)
-    keyword_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
+    keyword = models.CharField(max_length=120, default="", null=True, blank=True)
+    keyword_unique_searchfilter = models.OneToOneField(
+        UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
+    )
 
-    def __str__(self):
-        return str(self.keyword)
+    def __str__(self) -> str:
+        return self.keyword
 
 
 class UniqueLocationDisplayname(UniqueSearchfilter):
     class Meta:
-        db_table = 'unique_location_displayname'
-        ordering = ['most_specific_field_value']
+        db_table = "unique_location_displayname"
+        ordering = ["most_specific_field_value"]
 
     unique_json = models.JSONField(null=True, blank=True)
 
@@ -60,293 +109,475 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
 
     alternative_name = models.CharField(max_length=255, null=True, blank=True)
 
-    displayname_unique_searchfilter = models.OneToOneField(UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True)
+    displayname_unique_searchfilter = models.OneToOneField(
+        UniqueSearchfilter, on_delete=models.CASCADE, parent_link=True
+    )
 
-    videoitems = models.ManyToManyField(to='Videoitem')
-    geotags = models.ManyToManyField(to='GeotagLevel1')
-    gps_points = models.ManyToManyField(to='GmapsGpsPoint')
+    videoitems = models.ManyToManyField(to="Videoitem")
+    gps_points = models.ManyToManyField(to="GmapsGpsPoint")
 
+    all_geotags = models.ManyToManyField(to="Geotag", related_name="unique_displayname")
 
     @classmethod
-    def get_unique_displaynames_any_address_field_startswith(cls, startswith: str, max: int = 10):
-        # gjøre om til model fields istedetfor json, raskere søk
-        results = {}
+    def any_field_startswith(
+        cls, str_startswith: str, limit: int = 10
+    ) -> Optional[IdValueDict]:
+        # note: gjøre om til model fields istedetfor json? raskere søk
+        id_values = {}
         c = 0
         for obj in cls.objects.all():
-            for val in obj.get_unique_address_fields_not_null().values():
-                if val.lower().startswith(startswith.lower()):
-                    str_id = str(obj.id)
-                    displayname = str(obj)
-                    if str_id not in results and displayname not in results.values():
-                        results[str_id] = displayname
+            not_null_fields = obj.get_unique_address_fields_not_null().values()
+            for field_val in not_null_fields:
+                if field_val.lower().startswith(str_startswith.lower()):
+                    (str_id, displayname) = (str(obj.id), str(obj))
+                    if (
+                        str_id not in id_values
+                        and displayname not in id_values.values()
+                    ):
+                        name = (
+                            f"{displayname} ({field_val})"
+                            if displayname != field_val
+                            else displayname
+                        )
+                        id_values[str_id] = name
                         c += 1
                         break
-            if c == max:
+            if c == limit:
                 break
 
-        return results
+        return id_values
 
-    def get_displayname_variants(self):
-        return list(set(json.loads(self.unique_json)['displayname_variants']))
+    def _get_displayname_variants(self) -> list[str]:
+        return list(set(json.loads(self.unique_json)["displayname_variants"]))
 
-    @classmethod
-    def sort_objs_on_min_max_address_fields_count(cls, objects_list: list) -> object:
-        copy = list(objects_list)
-        copy.sort(key=lambda obj: len(obj.get_unique_address_fields_not_null().keys()))
-        return copy
-
-    def get_unique_address_fields_not_null(self):
-        fields = json.loads(self.unique_json)['unique_fields_include_null']
-        not_null = {
-            key: value for key, value in fields.items() if value
-        }
+    def get_unique_address_fields_not_null(self) -> AddressDict:
+        fields = json.loads(self.unique_json)["unique_fields_include_null"]
+        not_null = {key: value for key, value in fields.items() if value}
         return not_null
 
     @classmethod
-    def compare_addresses_get_parent_difference(cls, obj_min_address_fields: dict, obj_max_address_fields: dict) -> dict:
-        field_names = ['county', 'municipality', 'country_code']
+    def _sort_objs_on_min_max_address_fields_count(
+        cls: Type[T] = None, objects: tuple[T] = None
+    ) -> Optional[tuple[T]]:
+        if objects is None:
+            return None
+        objs_list = list(objects)
+        objs_list.sort(
+            key=lambda obj: len(obj.get_unique_address_fields_not_null().keys())
+        )
+        return tuple(objs_list)
 
-        for field in field_names:
-            if field in obj_min_address_fields and field in obj_max_address_fields:
-                if obj_min_address_fields[field] != obj_max_address_fields[field]:
-                    return {
-                        'obj_min_first_unique_parent': {
-                            'field' : field,
-                            'value' : obj_min_address_fields[field]
-                        },
-                        'obj_max_first_unique_parent': {
-                            'field' : field,
-                            'value' : obj_max_address_fields[field]
-                        }
-                    }
+    @classmethod
+    def _compare_addresses_get_parent_field_difference(
+        cls,
+        obj_min_address_dict: AddressDict = None,
+        obj_max_address_dict: AddressDict = None,
+    ) -> Optional[AddressParentFieldsComparisonDict]:
+        """
+        Helper method used to solve duplicate displaynames.
+
+        Compares two address dicts, which are different locations,
+        but share most precise field value.
+
+        Searches upwards in both address dicts to find the
+        first parent field difference.
+        """
+
+        field_names = ["county", "municipality", "country_code"]
+
+        field_name: AddressFieldName
+        for field_name in field_names:
+            if not (
+                field_name in obj_min_address_dict
+                and field_name in obj_max_address_dict
+            ):
+                continue
+            if obj_min_address_dict[field_name] != obj_max_address_dict[field_name]:
+                return {
+                    "obj_min_first_unique_parent": {
+                        "field": field_name,
+                        "value": obj_min_address_dict[field_name],
+                    },
+                    "obj_max_first_unique_parent": {
+                        "field": field_name,
+                        "value": obj_max_address_dict[field_name],
+                    },
+                }
         return None
 
     @classmethod
-    def is_different_location(cls, obj_min_address_fields: dict, obj_max_address_fields: dict) -> bool:
-        def check_field_difference(field_name):
-            if field_name not in ['locality', 'postal_town'] and obj_min_address_fields[field_name] != obj_max_address_fields[field_name]:
+    def _address_field_difference(
+        cls,
+        address_dict_min: AddressDict,
+        address_dict_max: AddressDict,
+        field_name: AddressFieldName,
+        postal_town_as_locality: bool = True,
+    ) -> bool:
+        """
+        Compares a single field in two address dictionaries.
+
+        Constraints:
+        * Specified field_name must be present in address_dict1.
+        * If there is difference in address precision,
+        the dictionaries must be sorted beforehand,
+        so that adress_dict2 is the most precise.
+
+        Returns True if field values are different
+        or if field is missing in address_dict2.
+
+        postal_town_as_locality:
+        * If set to True, locality and postal_town are treated as aliases.
+        Will then return False if locality == postal_town.
+        """
+
+        if not field_name:
+            raise AssertionError("field_name must be specified")
+
+        if field_name not in address_dict_min:
+            raise AssertionError("field_name must be present in address_dict1")
+
+        if field_name not in ["locality", "postal_town"]:
+            if (
+                field_name not in address_dict_max
+                or address_dict_min[field_name] != address_dict_max[field_name]
+            ):
                 return True
-            if field_name == 'locality':
-                if 'postal_town' in obj_max_address_fields:
-                    if obj_min_address_fields['locality'] == obj_max_address_fields['postal_town']:
-                        return False
-                    return True
-            elif field_name == 'postal_town':
-                if 'locality' in obj_max_address_fields:
-                    if obj_min_address_fields['postal_town'] == obj_max_address_fields['locality']:
-                        return False
-                    return True
+            return False
 
-        for field_name in obj_min_address_fields.keys():
-            if field_name not in obj_max_address_fields:
-                if check_field_difference(field_name):
-                    return True
-            elif obj_min_address_fields[field_name] != obj_max_address_fields[field_name]:
-                if check_field_difference(field_name):
-                    return True
-                    
-        return False
-        
+        if not postal_town_as_locality:
+            return True
+
+        if field_name == "locality":
+            if (
+                "postal_town" in address_dict_max
+                and address_dict_min["locality"] == address_dict_max["postal_town"]
+            ):
+                return False
+            return True
+
+        if field_name == "postal_town":
+            if (
+                "locality" in address_dict_max
+                and address_dict_min["postal_town"] == address_dict_max["locality"]
+            ):
+                return False
+            return True
+
     @classmethod
-    def solve_name_clash(cls, existing_obj: object, new_obj: object) -> str:
-        (obj_min, obj_max) = cls.sort_objs_on_min_max_address_fields_count([existing_obj, new_obj,])
+    def _is_different_location(
+        cls, address_dict_min: AddressDict, address_dict_max: AddressDict
+    ) -> bool:
+        """
+        Compares two address dictionaries, field for field.
 
-        obj_min_address_fields = obj_min.get_unique_address_fields_not_null()
-        obj_max_address_fields = obj_max.get_unique_address_fields_not_null()
+        Dictionaries must be sorted on field count,
+        so that the dict with least number of fields
+        (lowest precision) can be used as reference.
 
-        if not cls.is_different_location(obj_min_address_fields, obj_max_address_fields):
+        Returns true if difference in any fields,
+        but treats postal_town and locality as aliases.
+        """
+
+        field_name: AddressFieldName
+        for field_name in address_dict_min.keys():
+            if field_name not in address_dict_max:
+                if cls._address_field_difference(
+                    address_dict_min, address_dict_max, field_name
+                ):
+                    return True
+                return False
+            if (
+                address_dict_min[field_name] != address_dict_max[field_name]
+                and cls._address_field_difference(
+                address_dict_min, address_dict_max, field_name
+            )
+            ):
+                return True
+        return False
+
+    @classmethod
+    def _solve_name_clash(
+        cls: Type[T] = None, existing_obj: T = None, new_obj: T = None
+    ) -> StatusMessage:
+        """
+        Tries to solve cases where a name for a newly created instance
+        clashes with the name of an already existing instance.
+        """
+
+        (obj_min, obj_max) = cls._sort_objs_on_min_max_address_fields_count(
+            (existing_obj, new_obj)
+        )
+
+        obj_min_address_fields: AddressDict = (
+            obj_min.get_unique_address_fields_not_null()
+        )
+        obj_max_address_fields: AddressDict = (
+            obj_max.get_unique_address_fields_not_null()
+        )
+
+        if not cls._is_different_location(
+            obj_min_address_fields, obj_max_address_fields
+        ):
             new_obj.delete()
-            return 'DELETED'
-        
-        parent_difference_obj = cls.compare_addresses_get_parent_difference(obj_min_address_fields, obj_max_address_fields)
+            return StatusMessage.DELETED
 
-        if not parent_difference_obj:
+        parent_difference: bool = cls._compare_addresses_get_parent_field_difference(
+            obj_min_address_fields, obj_max_address_fields
+        )
+
+        if not parent_difference:
             new_obj.delete()
-            return 'DELETED'
+            return StatusMessage.DELETED
 
-        obj_min_alt_name = f'{obj_min.most_specific_field_value}, {parent_difference_obj["obj_min_first_unique_parent"]["value"]}'
-        obj_max_alt_name = f'{obj_max.most_specific_field_value}, {parent_difference_obj["obj_max_first_unique_parent"]["value"]}'
+        obj_min_alt_name: str = (
+            f"{obj_min.most_specific_field_value}, "
+            f'({parent_difference["obj_min_first_unique_parent"]["value"]})'
+        )
+        obj_max_alt_name: str = (
+            f"{obj_max.most_specific_field_value}, "
+            f'{parent_difference["obj_max_first_unique_parent"]["value"]}'
+        )
 
         if obj_min_alt_name == obj_max_alt_name:
-            return 'ERROR'
+            return StatusMessage.ERROR
 
         obj_min.alternative_name = obj_min_alt_name
         obj_min.save()
         obj_max.alternative_name = obj_max_alt_name
         obj_max.save()
 
-        return 'SOLVED'
+        return StatusMessage.SOLVED
 
-    def get_first_parent_field_value(self, from_field: str = None) -> str:
-        child_parent_dict = dict(
-            locality = ['postal_town', 'municipality', 'county'],
-            postal_town = 'municipality',
-            municipality = 'county',
-            county = 'country_code',
-            country_code = None,
-        )
+    def _get_first_parent_field_value(
+        self,
+        from_field: Union[AddressFieldName, list[AddressFieldName]] = None,
+    ) -> Optional[FieldValueNamedDict]:
+        """
+        Returns closest parent field value of any starting address field
+        in a class instance.
+        Allows multiple alternatives for parents.
 
-        if not from_field:
+        Child-Parent relations are defined in global ADDR_FIELDS_CHILD_PARENT.
+        """
+
+        if from_field is None:
             from_field = self.most_specific_field
-
-        if from_field == 'country_code':
-            return None
 
         obj_fields_not_null = self.get_unique_address_fields_not_null()
 
-        if len(obj_fields_not_null.keys()) == 1:
+        if from_field == "country_code" or len(obj_fields_not_null.keys()) == 1:
             return None
-        
+
         if isinstance(from_field, list):
-            parent_field = []
-            for x in from_field:
-                parent_field += child_parent_dict[x]
+            parent_field: list[AddressFieldName] = [
+                ADDR_FIELDS_CHILD_PARENT[x] for x in from_field
+            ]
         else:
-            parent_field = child_parent_dict[from_field]
+            parent_field: AddressFieldName = ADDR_FIELDS_CHILD_PARENT[from_field]
 
         if isinstance(parent_field, str):
             if parent_field in obj_fields_not_null:
-                return dict(
-                    field = parent_field,
-                    value = obj_fields_not_null[parent_field]
-                )
-            self.get_first_parent_field_value(from_field = parent_field)
-        
+                return {
+                    "field": parent_field,
+                    "value": obj_fields_not_null[parent_field],
+                }
+            self._get_first_parent_field_value(from_field=parent_field)
+
         if isinstance(parent_field, list):
             for field in parent_field:
                 if field in obj_fields_not_null:
-                    return dict(
-                        field = field,
-                        value = obj_fields_not_null[field]
-                    )
+                    return {"field": field, "value": obj_fields_not_null[field]}
             for field in parent_field:
-                self.get_first_parent_field_value(from_field = field)
+                self._get_first_parent_field_value(from_field=field)
 
     @classmethod
-    # veldig røff sketch
-    def rebuild(cls):
-        def get_most_specific_field(_dict):
-            first_key = list(_dict.keys())[0]
-            most_specific_field = list(_dict[first_key].keys())[0]
-            most_specific_field_value = _dict[first_key][list(_dict[first_key].keys())[0]]
+    def _get_name_groupings_dict(
+        cls, address_dict: AddressDict
+    ) -> AddressNameGroupingsDict:
+        """
+        Returns a handful of address fields duos.
 
-            return [most_specific_field, most_specific_field_value]
+        Sorted by personal taste, from most to least preferred combinations.
+        """
 
-        cls.objects.all().delete()
+        groupings = {
+            "postal_town_municipality": {
+                "postal_town": address_dict["postal_town"],
+                "municipality": address_dict["municipality"],
+            },
+            "postal_town_locality": {
+                "postal_town": address_dict["postal_town"],
+                "locality": address_dict["locality"],
+            },
+            "postal_town_county": {
+                "postal_town": address_dict["postal_town"],
+                "county": address_dict["county"],
+            },
+            "locality_municipality": {
+                "locality": address_dict["locality"],
+                "municipality": address_dict["municipality"],
+            },
+            "locality_county": {
+                "locality": address_dict["locality"],
+                "county": address_dict["county"],
+            },
+            "municipality_county": {
+                "municipality": address_dict["municipality"],
+                "county": address_dict["county"],
+            },
+            "county_country": {
+                "county": address_dict["county"],
+                "country_code": address_dict["country_code"],
+            },
+            "country_code": {
+                "country_code": address_dict["country_code"],
+            },
+        }
+        filtered = {}
+        for k, v in groupings.items():
+            incomplete = False
+            for field_val in v.values():
+                if field_val in ["", " ", None]:
+                    incomplete = True
+                    break
+            if not incomplete:
+                filtered[k] = v
+        return filtered
 
-        geotag_classes = [GeotagLevel1, GeotagLevel2, GeotagLevel3, GeotagLevel4, GeotagLevel5]
-        geotag_columns = ['postal_town', 'locality', 'municipality', 'county', 'country_code']
-        geotags = []
+    @classmethod
+    def _get_preferred_field(
+        cls,
+        groupings: AddressNameGroupingsDict,
+    ) -> tuple[AddressFieldName, Union[int, str]]:
+        first_combination: AddressFieldNameCombination = list(groupings.keys())[0]
 
-        for geotag_class in geotag_classes:
-            geotags += geotag_class.objects.all().values(*geotag_columns)
+        # note: move preferences index out of class scope.
+        field = list(groupings[first_combination].keys())[0]
+        value = groupings[first_combination][
+            list(groupings[first_combination].keys())[0]
+        ]
 
-        unique_displayname_groupings_json = []
+        return (field, value)
 
-        for geotag in geotags:
-            geotag_name_combinations = dict(
-                postal_town_municipality = dict(
-                    postal_town  = geotag['postal_town'],
-                    municipality = geotag['municipality'],
-                ),
-                postal_town_locality = dict(
-                    postal_town  = geotag['postal_town'],
-                    locality     = geotag['locality'],
-                ),
-                postal_town_county = dict(
-                    postal_town  = geotag['postal_town'],
-                    county       = geotag['county'],
-                ),
-                locality_municipality = dict(
-                    locality     = geotag['locality'],
-                    municipality = geotag['municipality'],
-                ),
-                locality_county = dict(
-                    locality     = geotag['locality'],
-                    county       = geotag['county'],
-                ),
-                municipality_county = dict(
-                    municipality = geotag['municipality'],
-                    county       = geotag['county'],
-                ),
-                county_country = dict(
-                    county       = geotag['county'],
-                    country_code = geotag['country_code'],
-                ),
-                country_code = dict(
-                    country_code = geotag['country_code'],
-                ),
-            )
+    # todo: refactor
+    @classmethod
+    def _address_dict_displayname_variants(
+        cls,
+        address_dict: AddressDict,
+        name_groupings: AddressNameGroupingsDict,
+    ) -> list[str]:
+        """
+        Builds shortened location displayname strings,
+        both from single field values (postal_town,
+        county, etc.), and comma seperated combinations.
 
-            geotag_displayname_alternatives = {}
+        Compares values in a given combination,
+        uses only one if values are the same.
+        Example: "Oslo, Oslo" becomes "Oslo".
+        """
 
-            for group, entries in geotag_name_combinations.items():
-                parts = list(entries.values())
-                if all(parts): 
-                    geotag_displayname_alternatives[group] = {}
-                    if len(parts) > 1 and parts[0] == parts[1]:
-                        key = list(entries.keys())[0]
-                        value = entries[key]
-                        geotag_displayname_alternatives[group][key] = parts[0]
-                    else:
-                        for key, value in entries.items():
-                            geotag_displayname_alternatives[group][key] = value
+        variants = {}
 
-            geotag_displayname_alternatives['displayname_variants'] = sorted([
+        combo: AddressFieldNameCombination
+        fields: AddressFieldValueDict
+        for combo, fields in name_groupings.items():
+            values = list(fields.values())
+            variants[combo] = {}
+            if len(values) > 1 and values[0] == values[1]:
+                key = list(fields.keys())[0]
+                value = fields[key]
+                variants[combo][key] = values[0]
+            else:
+                for key, value in fields.items():
+                    variants[combo][key] = value
+
+        displayname_variants = sorted(
+            [
                 ", ".join(
                     column
-                        if column != geotag['country_code'] else "__country_code__" + column
-                        for column in displayname_alt.values()
-                    )
-                for displayname_alt in geotag_displayname_alternatives.values()
-            ])
+                    if column != address_dict["country_code"]
+                    else "__country_code__" + column
+                    for column in displayname_alt.values()
+                )
+                for displayname_alt in variants.values()
+            ]
+        )
 
-            for column_value in geotag.values():
-                if all([
+        for column_value in address_dict.values():
+            if all(
+                [
                     column_value,
-                    column_value != geotag['country_code'],
-                    column_value not in geotag_displayname_alternatives['displayname_variants']
-                ]):
-                    geotag_displayname_alternatives['displayname_variants'].append(column_value)
+                    column_value != address_dict["country_code"],
+                    column_value not in displayname_variants,
+                ]
+            ):
+                displayname_variants.append(column_value)
 
-            geotag_displayname_alternatives['unique_fields_include_null'] = dict(geotag.items())
+        return displayname_variants
 
-            _json = json.dumps(geotag_displayname_alternatives, sort_keys=True)
+    @classmethod
+    def _all_geotags_as_address_dicts(cls) -> list[AddressDict]:
+        dicts = []
+        for _class in GEOTAGS_CLS:
+            dicts += _class.objects.all().values(*SORTED_ADDR_FIELDS)
+        return dicts
 
-            if _json not in unique_displayname_groupings_json:
-                unique_displayname_groupings_json.append(_json)
-                geotag_displayname_alternatives['json'] = _json
+    def link_to_geotags(self, address_dict: AddressDict) -> None:
+        for _class in GEOTAGS_CLS:
+            for obj in _class.objects.filter(**address_dict):
+                obj.unique_displayname_object = self
+                obj.save()
+
+    # todo: refactor
+    @classmethod
+    def _rebuild(cls):
+        cls.objects.all().delete()
+
+        unique_displayname_groupings_json = []
+        geotags_as_address_dicts = cls._all_geotags_as_address_dicts()
+
+        for address_dict in geotags_as_address_dicts:
+            name_groupings = cls._get_name_groupings_dict(address_dict)
+            name_variations = {}
+            name_variations[
+                "displayname_variants"
+            ] = cls._address_dict_displayname_variants(address_dict, name_groupings)
+            name_variations["unique_fields_include_null"] = dict(address_dict.items())
+
+            as_json = json.dumps(name_variations, sort_keys=True)
+
+            if as_json not in unique_displayname_groupings_json:
+                unique_displayname_groupings_json.append(as_json)
+                name_variations["json"] = as_json
             else:
                 continue
 
-            most_specific_field = get_most_specific_field(geotag_displayname_alternatives)
+            preferred_field = cls._get_preferred_field(name_groupings)
 
             existing_obj = cls.objects.filter(
-                most_specific_field_value = most_specific_field[1],
+                most_specific_field_value=preferred_field[1],
             ).first()
 
             new_obj = cls.objects.create(
-                unique_json = _json,
-                most_specific_field = most_specific_field[0],
-                most_specific_field_value = most_specific_field[1],
+                unique_json=as_json,
+                most_specific_field=preferred_field[0],
+                most_specific_field_value=preferred_field[1],
             )
 
             if existing_obj:
-                solve_clash = cls.solve_name_clash(existing_obj, new_obj)
-                saved_obj = existing_obj if solve_clash == 'DELETED' else new_obj
+                solve_clash = cls._solve_name_clash(existing_obj, new_obj)
+                saved_obj = (
+                    existing_obj if solve_clash == StatusMessage.DELETED else new_obj
+                )
             else:
                 saved_obj = new_obj
-            
-            for geotag_class in geotag_classes:
-                qs = geotag_class.objects.filter(**geotag)
-                for geotag_obj in qs:
-                    geotag_obj.unique_displayname_object = saved_obj
-                    geotag_obj.save()
+
+            saved_obj.link_to_geotags(address_dict=address_dict)
 
     def get_videoitems_qs(self):
         ...
 
     def __str__(self):
-        if self.alternative_name is None:
+        if self.alternative_name in ["", " ", None]:
             return str(self.most_specific_field_value)
         return str(self.alternative_name)

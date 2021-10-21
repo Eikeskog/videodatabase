@@ -1,6 +1,8 @@
 import React, {
   createContext,
   useContext,
+  useCallback,
+  // useEffect,
 } from 'react';
 import PropTypes from 'prop-types';
 
@@ -16,13 +18,17 @@ export const useUserContext = () => useContext(Context);
 
 const UserContext = ({ children }) => {
   const auth = useAuth();
-  const authorizedFetch = useAuthorizedFetch(auth);
+  const authorizedFetch = useCallback(useAuthorizedFetch(auth), [auth]);
+  // const userLists = useUserListsState(authorizedFetch);
 
   return (
     <Context.Provider
       value={{
-        useAuth: auth,
-        useAuthorizedFetch: authorizedFetch,
+        useAuth: useCallback(auth, [auth.headers, auth.isLoggedIn]),
+        useAuthorizedFetch: useCallback(authorizedFetch, [auth.headers, auth.isLoggedIn]),
+        // : useCallback(authorizedFetch, [auth.headers, auth.isLoggedIn]),
+        // useAuthorizedFetch: authorizedFetch,
+        // useUserLists: userLists,
       }}
     >
       {children}

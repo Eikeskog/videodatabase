@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Grid from '@material-ui/core/Grid';
 import Overlay from './components/Overlay/Overlay';
@@ -9,7 +9,7 @@ import { getThumbnailUrl } from '../../../common/utils/utils';
 
 import styles from './Card.module.css';
 
-const cardSizes = {
+const defaultCardSizes = {
   xs: 12,
   sm: 6,
   md: 4,
@@ -33,33 +33,42 @@ const Card = ({
       : null,
   );
 
+  const handleSliderChange = useCallback((event) => {
+    setThumbnailUrl(
+      getThumbnailUrl(videoitemId, parseInt(event.target.value, 10)),
+    );
+  }, []);
+
   const [displayOverlay, setDisplayOverlay] = useState(false);
   const [displaySlider, setDisplaySlider] = useState(false);
 
-  const handleSliderChange = (event) => setThumbnailUrl(
-    getThumbnailUrl(videoitemId, parseInt(event.target.value, 10)),
-  );
+  const hideSlider = () => { setDisplaySlider(false); };
+  const showSlider = () => { setDisplaySlider(true); };
+  const hideOverlay = () => { setDisplayOverlay(false); };
+  const showOverlay = () => { setDisplayOverlay(true); };
 
-  const openModal = (elementClicked) => toggleModal({
-    openedFromComponent: 'thumbnailboxOuter',
-    activeModalElement: elementClicked,
-    innerElementId: videoitemId,
-    optionalParams: null,
-  });
+  const openModal = useCallback((elementClicked) => {
+    toggleModal({
+      openedFromComponent: 'thumbnailboxOuter',
+      activeModalElement: elementClicked,
+      innerElementId: videoitemId,
+      optionalParams: null,
+    });
+  }, []);
 
   return (
     <Grid
       item
       key={videoitemId}
-      xs={cardSizes.xs}
-      sm={cardSizes.sm}
-      md={cardSizes.md}
-      lg={cardSizes.lg}
+      xs={defaultCardSizes.xs}
+      sm={defaultCardSizes.sm}
+      md={defaultCardSizes.md}
+      lg={defaultCardSizes.lg}
     >
       <div
         className={`${styles.card}`}
-        onMouseLeave={() => setDisplaySlider(false)}
-        onMouseEnter={() => setDisplaySlider(true)}
+        onMouseLeave={hideSlider}
+        onMouseEnter={showSlider}
       >
         <Header
           date={date}
@@ -69,8 +78,8 @@ const Card = ({
 
         <div
           className={`${styles.thumbnail}`}
-          onMouseEnter={() => setDisplayOverlay(true)}
-          onMouseLeave={() => setDisplayOverlay(false)}
+          onMouseEnter={showOverlay}
+          onMouseLeave={hideOverlay}
         >
 
           <Overlay display={displayOverlay} />
@@ -89,8 +98,8 @@ const Card = ({
           thumbnailsCount={thumbnailsCount}
           onSliderChange={handleSliderChange}
           displaySlider={displaySlider}
-          onMouseEnter={() => setDisplaySlider(true)}
-          onMouseLeave={() => setDisplaySlider(false)}
+          onMouseEnter={showSlider}
+          onMouseLeave={hideSlider}
         />
 
       </div>

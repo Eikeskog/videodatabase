@@ -27,7 +27,7 @@ export const getInnerComponent = ({ filterType, initalData }) => {
 export const renderInitial = (initalData) => (
   Object.keys(initalData)
     .map((filterType) => {
-      const InnerComponent = getInnerComponent({ filterType, initalData });
+      const Component = getInnerComponent({ filterType, initalData });
 
       return (
         <Dropdown
@@ -35,7 +35,7 @@ export const renderInitial = (initalData) => (
           filterType={filterType}
           initialValues={initalData[filterType]?.items}
           enableSearch={initalData[filterType]?.count > 10}
-          InnerComponent={InnerComponent}
+          InnerComponent={Component}
         />
       );
     })

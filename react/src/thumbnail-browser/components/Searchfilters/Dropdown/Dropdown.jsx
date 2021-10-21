@@ -2,13 +2,12 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
+import Header from './Header/Header';
 import useOnClickOutside from '../../../../common/hooks/useOnClickOutside';
-import { capitalizeFirstChar } from '../../../../common/utils/utils';
-import { languages } from '../../../../common/constants/constants';
 
 import styles from './Dropdown.module.css';
 
-const ContentContainer = styled(motion.div)`
+const Container = styled(motion.div)`
   position: absolute;
   max-width: 400px;
   min-width: 140px;
@@ -26,31 +25,10 @@ const ContentContainer = styled(motion.div)`
   box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
 `;
 
-const contentContainerVariants = {
+const containerVariants = {
   initial: { opacity: 0.6, height: 'auto' },
   toggle: { opacity: 1, height: 'auto', transition: { type: 'easeIn', duration: 0.1 } },
   exit: { opacity: 0.6, height: 'auto', transition: { type: 'easeOut', duration: 0.1 } },
-};
-
-const Header = ({
-  filterType,
-  toggle,
-  onClick,
-}) => {
-  const label = `${capitalizeFirstChar(languages.NO.filterTypes[filterType])}`;
-
-  return (
-    <button
-      type="button"
-      id={`filter-dropdown-${filterType}`}
-      className={toggle
-        ? `${styles.dropdownHeader} ${styles.active}`
-        : `${styles.dropdownHeader}`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
 };
 
 const Dropdown = ({
@@ -68,7 +46,7 @@ const Dropdown = ({
   const handleToggle = () => setToggle((prev) => !prev);
 
   return (
-    <div className={`${styles.dropdownOuterWrapper}`}>
+    <div className={`${styles.wrapper}`}>
       <Header
         filterType={filterType}
         onClick={handleToggle}
@@ -78,15 +56,15 @@ const Dropdown = ({
         <AnimatePresence>
           { toggle
           && (
-          <ContentContainer
+          <Container
             initial="initial"
             animate="toggle"
             exit="exit"
-            variants={contentContainerVariants}
+            variants={containerVariants}
             ref={ref}
           >
             {InnerComponent}
-          </ContentContainer>
+          </Container>
           )}
 
         </AnimatePresence>
@@ -95,19 +73,9 @@ const Dropdown = ({
   );
 };
 
-export default Dropdown;
+const MemoizedDropdown = React.memo(Dropdown);
 
-Header.propTypes = {
-  filterType: PropTypes.string,
-  toggle: PropTypes.bool,
-  onClick: PropTypes.func,
-};
-
-Header.defaultProps = {
-  filterType: '',
-  toggle: false,
-  onClick: null,
-};
+export default MemoizedDropdown;
 
 Dropdown.propTypes = {
   filterType: PropTypes.string,

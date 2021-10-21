@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 const useAuthorizedFetch = (auth) => {
   const {
@@ -10,7 +10,7 @@ const useAuthorizedFetch = (auth) => {
   } = auth;
   const [isFetching, setIsFetching] = useState(null);
 
-  const authorizedFetch = ({
+  const authorizedFetch = useCallback(({
     method = 'get',
     url,
     params = {},
@@ -22,6 +22,7 @@ const useAuthorizedFetch = (auth) => {
     if (!isLoggedIn) return;
 
     setIsFetching(url);
+
     const request = async () => {
       try {
         const { data } = await axios({
@@ -55,7 +56,7 @@ const useAuthorizedFetch = (auth) => {
         handleError,
       }));
     }
-  };
+  }, [isLoggedIn, headers]);
 
   return {
     authorizedFetch,

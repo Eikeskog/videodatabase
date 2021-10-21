@@ -1,0 +1,9 @@
+.pagination {
+  position: fixed;
+  bottom: 0;
+  margin-left: auto;
+  width: 100%;
+  background-color: black;
+  color: yellow;
+  zIndex: 10;
+}

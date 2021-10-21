@@ -2,10 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import VideoitemContext from './context/context';
 import HorizontalTabs from '../../common/components/TabbedContent/HorizontalTabs/HorizontalTabs';
-import File from './components/File/File';
-import Tags from './components/Tags/Tags';
-import Location from './components/Location/Location';
-import Lists from './components/Lists/Lists';
+import tabsDict from './tabsDict';
 
 // early progress/simple demo
 const VideoitemModal = ({
@@ -16,58 +13,21 @@ const VideoitemModal = ({
   localPaths,
   userLists,
   tags,
-}) => {
-  const location = {
-    header: 'Sted',
-    component: <Location />,
-  };
+}) => (
+  <VideoitemContext
+    videoitemId={videoitemId}
+    locationDisplayname={locationDisplayname}
+    lat={mapCenter.lat}
+    lng={mapCenter.lng}
+    nearbyItems={nearbyItems}
+    userLists={userLists}
+  >
+    <HorizontalTabs
+      tabsDict={tabsDict({ localPaths, tags })}
+    />
 
-  const date = {
-    header: 'Dato',
-    component: <p>test1</p>,
-  };
-
-  const file = {
-    header: 'Filinfo',
-    component: <File json={localPaths} />,
-  };
-
-  const lists = {
-    header: 'Lister',
-    component: <Lists />,
-  };
-
-  const itemTags = {
-    header: 'Tags',
-    component: <Tags tags={tags} />,
-  };
-
-  const timeline = {
-    header: 'Tidslinje',
-    component: <p>test5</p>,
-  };
-  return (
-    <VideoitemContext
-      videoitemId={videoitemId}
-      locationDisplayname={locationDisplayname}
-      lat={mapCenter.lat}
-      lng={mapCenter.lng}
-      nearbyItems={nearbyItems}
-      userLists={userLists}
-    >
-      <HorizontalTabs
-        tabsDict={{
-          location,
-          date,
-          file,
-          lists,
-          itemTags,
-          timeline,
-        }}
-      />
-    </VideoitemContext>
-  );
-};
+  </VideoitemContext>
+);
 
 VideoitemModal.propTypes = {
   videoitemId: PropTypes.string,

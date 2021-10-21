@@ -11,21 +11,22 @@ const MapContainer = styled(motion.div)`
   overflow: hidden;
 `;
 
+// simple demo
 const Map = () => {
   const [showNearbyItems, setShowNearbyItems] = useState(false);
 
-  const { useLocationState } = useVideoitemContext();
-
   const {
-    locationDisplayname,
-    setLocationDisplayname,
-    onMapChange,
-    onMarkerChange,
-    mapState,
-    markersState,
-    toggleDraggableMarker,
-    draggableMarker,
-  } = useLocationState;
+    useLocationState: {
+      locationDisplayname,
+      setLocationDisplayname,
+      onMapChange,
+      onMarkerChange,
+      mapState,
+      markersState,
+      toggleDraggableMarker,
+      draggableMarker,
+    },
+  } = useVideoitemContext();
 
   return (
     <div>
@@ -101,38 +102,6 @@ const Map = () => {
       </div>
     </div>
   );
-};
-
-Map.propTypes = {
-  // markersState: PropTypes.objectOf(
-  //   PropTypes.shape({
-  //     lat: PropTypes.number,
-  //     lng: PropTypes.number,
-  //     draggable: PropTypes.bool,
-  //   }),
-  // ),
-  // draggableMarker: PropTypes.bool,
-  // toggleDraggableMarker: PropTypes.func,
-  // mapState: PropTypes.shape({
-  //   center: PropTypes.shape({
-  //     lat: PropTypes.number,
-  //     lng: PropTypes.number,
-  //   }),
-  //   zoom: PropTypes.number,
-  // }),
-  // onMapChange: PropTypes.func,
-  // locationDisplayname: PropTypes.string,
-  // onMarkerChange: PropTypes.func,
-};
-
-Map.defaultProps = {
-  // markersState: null,
-  // draggableMarker: false,
-  // toggleDraggableMarker: null,
-  // mapState: null,
-  // locationDisplayname: '',
-  // onMarkerChange: null,
-  // onMapChange: null,
 };
 
 export default Map;

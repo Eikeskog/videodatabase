@@ -17,12 +17,11 @@ const Searchfilters = () => {
 
   return (
     <div className={`${styles.headers}`}>
-      {/* <span>
-        Filtrer søk:
-      </span> */}
       {dropdowns}
     </div>
   );
 };
 
-export default Searchfilters;
+const MemoizedSearchfilters = React.memo(Searchfilters);
+
+export default MemoizedSearchfilters;

@@ -3,6 +3,7 @@ import VerticalTabs from '../../../../common/components/TabbedContent/VerticalTa
 import NearbyItems from './NearbyItems';
 import Map from './Map';
 
+// not implemented
 const map = {
   header: 'Kart',
   component: <Map />,
