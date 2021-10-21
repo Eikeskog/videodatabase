@@ -73,7 +73,7 @@ class ScheduledReverseGeotag(models.Model):
 
     @classmethod
     def get_gmaps_geotag_dict(cls, latlng: LatLngTuple) -> MultiLevelGeocodeDict:
-        """Execute reverse geocoding"""
+        """Run Google Maps reverse geocoding, return dictionary"""
         geocode_dict = get_reverse_geotags_gmaps(latlng)
         return geocode_dict
 
@@ -117,7 +117,7 @@ class ScheduledReverseGeotag(models.Model):
                 geotag_dict = cls.get_gmaps_geotag_dict(latlng)
                 if not geotag_dict:
                     continue
-                geotag = GeotagLvl1._new_from_geocode_dict(geotag_dict)
+                geotag = GeotagLvl1.new_from_geocode_dict(geotag_dict)
                 if geotag:
                     new_geotags.append(geotag)
                     new_geotags.sort(key=lambda obj: obj.areal)
@@ -231,7 +231,7 @@ class Geotag(models.Model):
             "lng_max": geocode_dict["lng_max"],
         }
 
-    def _update_from_dict(
+    def update_from_dict(
         self, geocode_dict: GeocodeDict, exclude_keys: Optional[list[Union[str, int]]]
     ) -> None:
         """Update a Geotag instance from a GeocodeDict."""
@@ -249,7 +249,7 @@ class Geotag(models.Model):
             self.other_fields = json.dumps(other_fields)
         self.save()
 
-    def _calc_bbox_areal(self) -> None:
+    def calc_bbox_areal(self) -> None:
         """
         Calculates and sets boundingbox areal
         in an existing Geotag instance.
@@ -264,7 +264,7 @@ class Geotag(models.Model):
     def bbox_areal(self) -> float:  # Decimal?
         """Return boundingbox areal in square meters."""
         if self.areal is None:
-            self._calc_bbox_areal()
+            self.calc_bbox_areal()
         return self.areal
 
     def get_gps_points(self, limit: int) -> Optional[QuerySet]:
@@ -294,7 +294,7 @@ class Geotag(models.Model):
         return displayname.strip()
 
     @classmethod
-    def _new_from_geocode_dict(cls: Type[T], geocode_dict: MultiLevelGeocodeDict) -> T:
+    def new_from_geocode_dict(cls: Type[T], geocode_dict: MultiLevelGeocodeDict) -> T:
         """
         Creates a new chain of connected Geotags (levels 1 through 5)
         from a MultiLevelGeocodeDict. (Connects each with preceding parent).
@@ -332,8 +332,8 @@ class Geotag(models.Model):
 
             if created:
                 exclude_keys = list(cur_bbox.keys())
-                obj._update_from_dict(cur_dict, exclude_keys=exclude_keys)
-                obj._calc_bbox_areal()
+                obj.update_from_dict(cur_dict, exclude_keys=exclude_keys)
+                obj.calc_bbox_areal()
 
             if prev_geotag is None:
                 prev_geotag = obj
@@ -434,7 +434,7 @@ class GmapsGpsPoint(models.Model):
         if self.geotag_lvl_1:
             return self.geotag_lvl_1.get_displayname_short_values()
 
-    def _distance_to_point(self, latlng):
+    def distance_to_point(self, latlng):
         return distance.distance(
             (
                 self.lat,
@@ -464,7 +464,7 @@ class GmapsGpsPoint(models.Model):
         if not qs:
             return None
         for obj in qs:
-            if obj._distance_to_point(latlng).meters <= 1:
+            if obj.distance_to_point(latlng).meters <= 1:
                 return obj
         return None
 
@@ -485,7 +485,7 @@ class GmapsGpsPoint(models.Model):
             obj = GmapsGpsPoint.objects.create(lat=latlng[0], lng=latlng[1])
         return obj
 
-    def _connect_with_geotag(self) -> object:
+    def connect_with_geotag(self) -> object:
         if self.geotag_lvl_1 is not None:
             return self
         geotag = Geotag.get_smallest_container(latlng=(self.lat, self.lng))
@@ -500,5 +500,5 @@ class GmapsGpsPoint(models.Model):
     def get_by_latlng(cls: Type[T], latlng: LatLngTuple) -> T:
         # check_type("LatLngTuple", latlng, LatLngTuple)
         obj = cls._get_approx_or_create_new(latlng, m_max=2)
-        obj._connect_with_geotag()
+        obj.connect_with_geotag()
         return obj

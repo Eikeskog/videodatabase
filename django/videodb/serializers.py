@@ -55,11 +55,11 @@ class UniqueSearchfiltersSerializer(serializers.ModelSerializer):
         #     # addr = {k: v for k,v in json.loads(m_dict["unique_json"])["unique_fields_include_null"].items() if v}
         #     # print(addr)
         #     # # addr2 = x.unique_fields_not_null()
-        #     x._link_to_geotags(addr)
+        #     x.link_to_geotags(addr)
         # print()
         # for x in UniqueLocationDisplayname._all_geotags_as_address_dicts():
         # for obj in UniqueLocationDisplayname.objects.all():
-        #     obj._link_to_geotags(x)
+        #     obj.link_to_geotags(x)
 
         data = {}
 

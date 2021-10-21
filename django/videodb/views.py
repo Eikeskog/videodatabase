@@ -1,3 +1,4 @@
+from typing import Optional
 from django.forms.models import model_to_dict
 from rest_framework.decorators import action
 from rest_framework import status, viewsets, mixins
@@ -88,7 +89,7 @@ class VideoitemsListView(viewsets.ModelViewSet):
         except AttributeError:
             return False
 
-    def get_instance_if_permitted(self) -> VideoitemsList:
+    def get_instance_if_permitted(self) -> Optional[VideoitemsList]:
         try:
             user = self.request.user
             if user.is_authenticated:

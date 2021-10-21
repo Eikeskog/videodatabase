@@ -39,7 +39,6 @@ class LocationFilter(django_filters.FilterSet):
             ids_values = UniqueLocationDisplayname.any_field_startswith(
                 str_startswith=value, limit=limit
             )
-            print(ids_values)
             if ids_values:
                 new_qs = UniqueLocationDisplayname.objects.exclude(id__in=qs).filter(
                     id__in=list(ids_values.keys())
@@ -67,9 +66,7 @@ class VideoitemsFilter(django_filters.FilterSet):
         geotags_query = Q()
 
         for obj in UniqueLocationDisplayname.objects.filter(id__in=ids):
-            not_null_fields = obj._get_unique_address_fields_not_null()
-            # print(not_null_fields)
-            # print(f'biatch {Geotag.objects.filter(**not_null_fields)}')
+            not_null_fields = obj.get_unique_address_fields_not_null()
             geotags_query |= Q(**not_null_fields) | Q(
                 unique_displayname_object_id__in=ids
             )
@@ -79,14 +76,6 @@ class VideoitemsFilter(django_filters.FilterSet):
             for geotag_class in GEOTAG_CLASSES
         ]
 
-        # geotags_qs = Geotag.objects.filter(geotags_query)
-
-        # build nested reverse lookups for geotags
-        # level_1 = "gmaps_gps_point_id__geotag_level_1_id"
-        # level_2 = f"{level_1}__geotag_level_2_id"
-        # level_3 = f"{level_2}__geotag_level_3_id"
-        # level_4 = f"{level_3}__geotag_level_4_id"
-        # level_5 = f"{level_4}__geotag_level_5_id"
         level_1 = "gmaps_gps_point_id__geotag_lvl_1_id"
         level_2 = f"{level_1}__parent_id"
         level_3 = f"{level_2}__parent_id"
@@ -99,7 +88,6 @@ class VideoitemsFilter(django_filters.FilterSet):
             | Q(**{f"{level_4}__in": geotags_qs[3]})
             | Q(**{f"{level_5}__in": geotags_qs[4]})
         )
-        # print(level_5)
 
         return queryset.exclude(gmaps_gps_point__isnull=True).filter(query)
 

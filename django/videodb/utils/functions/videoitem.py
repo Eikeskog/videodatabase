@@ -54,19 +54,18 @@ def get_nearby_videoitems(
         lat=float(videoitem.gps_lat),
         lng=float(videoitem.gps_lng),
         steps_m=meters,
-        exclude_prev_step_inner=True,
+        exclude_prev_step_inner=False,
     )
 
-    outer_bounds_key = str(meters[-1])
-
-    outer_bounds_filter = (
-        Q(lat__lt=boundingboxes[outer_bounds_key]["boundingbox"]["lat_min"])
-        | Q(lat__gt=boundingboxes[outer_bounds_key]["boundingbox"]["lat_max"])
-        | Q(lng__lt=boundingboxes[outer_bounds_key]["boundingbox"]["lng_min"])
-        | Q(lng__gt=boundingboxes[outer_bounds_key]["boundingbox"]["lng_max"])
+    bbox_max_key = str(meters[-1])
+    bbox_max = boundingboxes[bbox_max_key]["boundingbox"]
+    bbox_max_qs = GmapsGpsPoint.objects.exclude(
+        Q(lat__lt=bbox_max["lat_min"])
+        | Q(lat__gt=bbox_max["lat_max"])
+        | Q(lng__lt=bbox_max["lng_min"])
+        | Q(lng__gt=bbox_max["lng_max"])
     )
 
-    outer_bounds_qs = GmapsGpsPoint.objects.exclude(outer_bounds_filter)
     for i, meter in enumerate(meters):
         precise = i < measure_precise
         key = str(meter)
@@ -80,14 +79,8 @@ def get_nearby_videoitems(
             | Q(lng__lt=lng_min)
             | Q(lng__gt=lng_max)
         )
-        inner_include = (
-            Q(lat__gt=lat_min)
-            & Q(lat__lt=lat_max)
-            & Q(lng__gt=lng_min)
-            & Q(lng__lt=lng_max)
-        )
         if i == 0:
-            qs = GmapsGpsPoint.objects.exclude(outer_exclude).filter(inner_include)
+            qs = GmapsGpsPoint.objects.exclude(outer_exclude)
         else:
             prev_key = str(meters[i - 1])
             prev_bbox = boundingboxes[prev_key]["boundingbox"]
@@ -101,13 +94,9 @@ def get_nearby_videoitems(
                 & Q(lng__lt=lng_max_prev)
             )
         if i == len(meters) - 1:
-            qs = outer_bounds_qs.exclude(inner_exclude)
+            qs = bbox_max_qs.exclude(inner_exclude)
         elif len(meters) - 1 > i > 0:
-            qs = (
-                GmapsGpsPoint.objects.exclude(outer_exclude)
-                .exclude(inner_exclude)
-                .filter(inner_include)
-            )
+            qs = GmapsGpsPoint.objects.exclude(outer_exclude).exclude(inner_exclude)
 
         distances = []
         for gps_point in qs[:max_per_group]:
