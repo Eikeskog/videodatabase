@@ -39,14 +39,6 @@ ADDR_FIELDS_CHILD_PARENT = {
     "country_code": None,
 }
 
-# GEOTAGS_CLS = [
-#     GeotagLevel1,
-#     GeotagLevel2,
-#     GeotagLevel3,
-#     GeotagLevel4,
-#     GeotagLevel5,
-# ]
-
 GEOTAGS_CLS = [
     GeotagLvl1,
     GeotagLvl2,
@@ -127,12 +119,14 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     all_geotags = models.ManyToManyField(to="Geotag", related_name="unique_displayname")
 
     @classmethod
-    def any_field_startswith(cls, str_startswith: str, limit: int = 10) -> IdValueDict:
+    def any_field_startswith(
+        cls, str_startswith: str, limit: int = 10
+    ) -> Optional[IdValueDict]:
         # note: gjøre om til model fields istedetfor json? raskere søk
         id_values = {}
         c = 0
         for obj in cls.objects.all():
-            not_null_fields = obj._get_unique_address_fields_not_null().values()
+            not_null_fields = obj.get_unique_address_fields_not_null().values()
             for field_val in not_null_fields:
                 if field_val.lower().startswith(str_startswith.lower()):
                     (str_id, displayname) = (str(obj.id), str(obj))
@@ -156,7 +150,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
     def _get_displayname_variants(self) -> list[str]:
         return list(set(json.loads(self.unique_json)["displayname_variants"]))
 
-    def _get_unique_address_fields_not_null(self) -> AddressDict:
+    def get_unique_address_fields_not_null(self) -> AddressDict:
         fields = json.loads(self.unique_json)["unique_fields_include_null"]
         not_null = {key: value for key, value in fields.items() if value}
         return not_null
@@ -169,7 +163,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
             return None
         objs_list = list(objects)
         objs_list.sort(
-            key=lambda obj: len(obj._get_unique_address_fields_not_null().keys())
+            key=lambda obj: len(obj.get_unique_address_fields_not_null().keys())
         )
         return tuple(objs_list)
 
@@ -315,10 +309,10 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         )
 
         obj_min_address_fields: AddressDict = (
-            obj_min._get_unique_address_fields_not_null()
+            obj_min.get_unique_address_fields_not_null()
         )
         obj_max_address_fields: AddressDict = (
-            obj_max._get_unique_address_fields_not_null()
+            obj_max.get_unique_address_fields_not_null()
         )
 
         if not cls._is_different_location(
@@ -369,7 +363,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         if from_field is None:
             from_field = self.most_specific_field
 
-        obj_fields_not_null = self._get_unique_address_fields_not_null()
+        obj_fields_not_null = self.get_unique_address_fields_not_null()
 
         if from_field == "country_code" or len(obj_fields_not_null.keys()) == 1:
             return None
@@ -482,7 +476,6 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
         Example: "Oslo, Oslo" becomes "Oslo".
         """
 
-        # name_groupings: AddressNameGroupingsDict = cls._get_name_groupings_dict(address_dict)
         variants = {}
 
         combo: AddressFieldNameCombination
@@ -529,7 +522,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
             dicts += _class.objects.all().values(*SORTED_ADDR_FIELDS)
         return dicts
 
-    def _link_to_geotags(self, address_dict: AddressDict) -> None:
+    def link_to_geotags(self, address_dict: AddressDict) -> None:
         for _class in GEOTAGS_CLS:
             for obj in _class.objects.filter(**address_dict):
                 obj.unique_displayname_object = self
@@ -579,7 +572,7 @@ class UniqueLocationDisplayname(UniqueSearchfilter):
             else:
                 saved_obj = new_obj
 
-            saved_obj._link_to_geotags(address_dict=address_dict)
+            saved_obj.link_to_geotags(address_dict=address_dict)
 
     def get_videoitems_qs(self):
         ...
