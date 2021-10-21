@@ -6,8 +6,8 @@ from numbers import Real
 class AddressDict(TypedDict, total=False):
     plus_code: Optional[str]
     locality: Optional[str]
-    postal_town: Optional[Union[str, int]]
-    postal_code: Optional[str]
+    postal_town: Optional[str]
+    postal_code: Optional[Union[str, int]]
     municipality: Optional[str]
     county: Optional[str]
     country: Optional[str]
@@ -40,7 +40,7 @@ class BoundingBoxDistancesDict(TypedDict):
     ew: Real
 
 
-class GeocodeDict(TypedDict):  # Inherit AddressDict?
+class GeocodeDict(TypedDict):
     lat_min: Real
     lat_max: Real
     lng_min: Real
@@ -51,8 +51,8 @@ class GeocodeDict(TypedDict):  # Inherit AddressDict?
 
     plus_code: Optional[str]
     locality: Optional[str]
-    postal_town: Optional[Union[str, int]]
-    postal_code: Optional[str]
+    postal_town: Optional[str]
+    postal_code: Optional[Union[str, int]]
     municipality: Optional[str]
     county: Optional[str]
     country: Optional[str]

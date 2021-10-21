@@ -68,9 +68,9 @@ class Country:
     def country_code(self):
         return self._country_code
 
-    def translate_to(cls, self, language_code):
+    def translate_to(self, language_code):
         self._language_code = language_code.lower()
-        self._translated_name = cls.get_translation(
+        self._translated_name = Countries.get_translation(
             self._country_code, self._language_code
         )
         return self._translated_name

@@ -7,7 +7,7 @@ DEBUG = True
 
 try:
     from .dev_settings import *
-except:
+except AssertionError:
     pass
 
 ALLOWED_HOSTS = ["*"]
