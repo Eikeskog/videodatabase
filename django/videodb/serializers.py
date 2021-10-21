@@ -143,9 +143,6 @@ class LocalFileSerializer(serializers.ModelSerializer):
         fields = ["path"]
         depth = 1
 
-    def validate(self, data):
-        return super().validate(data)
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
 
@@ -211,9 +208,6 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
 
         return user_lists
 
-    def validate(self, data):
-        return super().validate(data)
-
     def to_representation(self, instance):
         t0 = timer()
         data = super().to_representation(instance)
@@ -240,9 +234,6 @@ class TypingHintsSerializer(serializers.ModelSerializer):
     class Meta:
         model = None
         fields = None
-
-    def validate(self, data):
-        return super().validate(data)
 
     def to_representation(self, instance):
         data = {
