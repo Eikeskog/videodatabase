@@ -35,26 +35,26 @@ const Dropdown = ({
   filterType,
   InnerComponent,
 }) => {
-  const [toggle, setToggle] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const ref = useRef();
 
   useOnClickOutside(ref, (event) => {
     if (event.target.id.split('filter-dropdown-')?.[1] === filterType) return;
-    setToggle(false);
+    setExpanded(false);
   });
 
-  const handleToggle = () => setToggle((prev) => !prev);
+  const toggle = () => setExpanded((prev) => !prev);
 
   return (
     <div className={`${styles.wrapper}`}>
       <Header
         filterType={filterType}
-        onClick={handleToggle}
-        toggle={toggle}
+        onClick={toggle}
+        expanded={expanded}
       />
       <div>
         <AnimatePresence>
-          { toggle
+          { expanded
           && (
           <Container
             initial="initial"

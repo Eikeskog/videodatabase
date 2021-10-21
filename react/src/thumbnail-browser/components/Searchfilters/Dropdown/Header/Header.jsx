@@ -6,7 +6,7 @@ import styles from './Header.module.css';
 
 const Header = React.memo(({
   filterType,
-  toggle,
+  expanded,
   onClick,
 }) => {
   const label = `${capitalizeFirstChar(TRANSLATIONS.NO.filterTypes[filterType])}`;
@@ -15,7 +15,7 @@ const Header = React.memo(({
     <button
       type="button"
       id={`filter-dropdown-${filterType}`}
-      className={toggle
+      className={expanded
         ? `${styles.header} ${styles.active}`
         : `${styles.header}`}
       onClick={onClick}
@@ -27,13 +27,13 @@ const Header = React.memo(({
 
 Header.propTypes = {
   filterType: PropTypes.string,
-  toggle: PropTypes.bool,
+  expanded: PropTypes.bool,
   onClick: PropTypes.func,
 };
 
 Header.defaultProps = {
   filterType: '',
-  toggle: false,
+  expanded: false,
   onClick: null,
 };
 
