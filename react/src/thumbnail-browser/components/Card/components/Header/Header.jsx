@@ -28,16 +28,12 @@ const Header = ({
   openModal,
 }) => (
   <div className={`${styles.header}`}>
-    <Left>
-      {date}
-    </Left>
-
+    <Left>{date}</Left>
     <Right
       onClick={() => openModal('locationDisplayname')}
     >
       {locationDisplayname}
     </Right>
-
   </div>
 );
 

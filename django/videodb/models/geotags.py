@@ -289,7 +289,7 @@ class Geotag(models.Model):
         model_dict = model_to_dict(self, fields=fields)
         displayname = ", ".join(
             model_dict[x] for x in fields if all([x is not None, model_dict[x]])
-        ).replace("fylke", "")
+        )#.replace("fylke", "")
 
         return displayname.strip()
 

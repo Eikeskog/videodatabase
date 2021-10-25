@@ -148,7 +148,6 @@ class LocalFileSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-
         data["project"] = instance.get_project()
         data["disk"] = instance.get_disk()
         data["directory"] = instance.get_directory()
@@ -215,7 +214,7 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
         return super().validate(data)
 
     def to_representation(self, instance):
-        t0 = timer()
+        # t0 = timer()
         data = super().to_representation(instance)
         data["location_displayname"] = instance.get_displayname_short()
         # nearby items er en liten bottleneck, tar 15-20 ms å kjøre sånn det er nå.
@@ -230,9 +229,9 @@ class VideoitemEntrySerializer(serializers.ModelSerializer):
         data["tags"] = instance.get_tags()
         data["location_suggestions"] = instance.get_gps_suggestions_local_dir()
 
-        t1 = timer()
-        print("elapsed:", t1 - t0)
-        # print(data["nearby_items"])
+        # t1 = timer()
+        # print("elapsed:", t1 - t0)
+
         return data
 
 
@@ -265,5 +264,5 @@ class VideoitemsSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["location_displayname_short"] = instance.get_displayname_short()
-
+        print(data)
         return data

@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useState, useCallback,
+  useState, useCallback, useLayoutEffect,
 } from 'react';
 import { Grid } from '@material-ui/core';
 import PropTypes from 'prop-types';
@@ -44,19 +44,23 @@ const ThumbnailGrid = ({
 }) => {
   const [data, setData] = useState([]);
   const { restApiParams } = useSearchfilters();
-
   const {
-    useAuthorizedFetch: { authorizedFetch, isFetching },
+    useAuthorizedFetch: {
+      authorizedFetch,
+      isFetching,
+    },
   } = useUserContext();
 
   const handleResponse = useCallback((response) => {
+    setData(renderCards(response?.results, toggleModal));
     setItemsCount(parseInt(response?.count, 10));
-    setData(() => renderCards(response?.results, toggleModal));
   }, []);
 
-  const handleError = useCallback((error) => { console.log(error); }, []);
+  const handleError = ((error) => {
+    console.log(error);
+  });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     fetchData({
       authorizedFetch,
       handleResponse,
@@ -65,18 +69,10 @@ const ThumbnailGrid = ({
       currentPage,
       viewPerPage,
     });
-  }, [viewPerPage, currentPage]);
+  }, [viewPerPage, currentPage, restApiParams]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (currentPage !== 1) setCurrentPage(1);
-    fetchData({
-      authorizedFetch,
-      handleResponse,
-      handleError,
-      restApiParams,
-      currentPage,
-      viewPerPage,
-    });
   }, [restApiParams]);
 
   return (

@@ -21,7 +21,7 @@ const FilterChips = () => {
               key={`${filterType}-${filterId}`}
               onClick={() => handleClick(filterType, filterId)}
             >
-              {chipLabel(filterType, filterId)}
+              {`${chipLabel(filterType, filterId)}`}
 
               <UnicodeIcon
                 symbol="x"

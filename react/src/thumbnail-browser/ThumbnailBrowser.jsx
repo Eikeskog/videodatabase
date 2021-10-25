@@ -7,7 +7,7 @@ const getPageCount = (itemsCount, viewPerPage) => (
   Math.floor((itemsCount + viewPerPage - 1) / viewPerPage)
 );
 
-const ThumbnailBrowser = ({ toggleModal }) => {
+const ThumbnailBrowser = ({ openModal }) => {
   const [state, setState] = useState({
     currentPage: 1,
     viewPerPage: 20,
@@ -44,14 +44,13 @@ const ThumbnailBrowser = ({ toggleModal }) => {
 
   return (
     <>
-
       <ThumbnailGrid
         currentPage={state.currentPage}
         viewPerPage={state.viewPerPage}
         itemsCount={state.itemsCount}
         setItemsCount={setItemsCount}
         setCurrentPage={handlePageChange}
-        toggleModal={toggleModal}
+        toggleModal={openModal}
       />
 
       <Pagination
@@ -66,11 +65,11 @@ const ThumbnailBrowser = ({ toggleModal }) => {
 };
 
 ThumbnailBrowser.propTypes = {
-  toggleModal: PropTypes.func,
+  openModal: PropTypes.func,
 };
 
 ThumbnailBrowser.defaultProps = {
-  toggleModal: null,
+  openModal: null,
 };
 
 const MemoizedThumbnailBrowser = React.memo(ThumbnailBrowser);

@@ -5,14 +5,18 @@ import ThumbnailBrowser from './thumbnail-browser/ThumbnailBrowser';
 import SearchfiltersContext from './thumbnail-browser/contexts/SearchfiltersContext';
 import { useUserContext } from './common/contexts/UserContext/UserContext';
 import useDynamicModal from './common/hooks/useDynamicModal/useDynamicModal';
-
 import usePalette from './common/hooks/usePalette';
 import styles from './App.module.css';
 
 const App = () => {
-  const palette = usePalette();
+  const {
+    useAuth: {
+      isLoggedIn,
+      logIn,
+    },
+  } = useUserContext();
   const { modalContent, getModal } = useDynamicModal();
-  const { useAuth: { isLoggedIn, logIn } } = useUserContext();
+  const palette = usePalette();
 
   return (
     !isLoggedIn
@@ -25,7 +29,7 @@ const App = () => {
             { modalContent
               && modalContent }
 
-            <ThumbnailBrowser toggleModal={getModal} />
+            <ThumbnailBrowser openModal={getModal} />
           </div>
         </SearchfiltersContext>
       )
